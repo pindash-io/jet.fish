@@ -1,9 +1,9 @@
 @font-face { font-family: "Departure Mono"; src: url("/assets/fonts/departure-mono/DepartureMono-1.500.woff2") format("woff2"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "Obel Mono"; src: url("/assets/fonts/obel-mono/ObelMono-VF.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
 @font-face { font-family: "Obel Mono"; src: url("/assets/fonts/obel-mono/ObelMono-Italic-VF.woff2") format("woff2"); font-weight: 100 900; font-style: italic; font-display: swap; }
-@font-face { font-family: "Lilex Nerd Font Mono"; src: url("/assets/fonts/lilex-nerd-font-mono/LilexNerdFontMono-Regular.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "Lilex Nerd Font Mono"; src: url("/assets/fonts/lilex-nerd-font-mono/LilexNerdFontMono-Bold.woff") format("woff"); font-weight: 700; font-style: normal; font-display: swap; }
-@font-face { font-family: "Lilex Nerd Font Mono"; src: url("/assets/fonts/lilex-nerd-font-mono/LilexNerdFontMono-Italic.woff") format("woff"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Lilex Nerd Font Mono"; src: url("/assets/fonts/lilex-nerd-font-mono/LilexNerdFontMono-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Lilex Nerd Font Mono"; src: url("/assets/fonts/lilex-nerd-font-mono/LilexNerdFontMono-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Lilex Nerd Font Mono"; src: url("/assets/fonts/lilex-nerd-font-mono/LilexNerdFontMono-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
 
 :root {
   --bg: #05070d;
