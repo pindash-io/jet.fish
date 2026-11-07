@@ -1,0 +1,103 @@
+---
+import "../styles/bebop.css";
+import "../styles/bebop-light.css";
+import "../styles/bebop-lock.css";
+const title = "jet.fish — a native terminal for the long way home";
+const description = "A native terminal for the long way home. A live session on the Bebop.";
+---
+<!doctype html>
+<html lang="en" data-light-chart="staff" data-monitor="authored">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{title}</title>
+  <meta name="description" content={description}>
+  <meta name="theme-color" content="#05070d">
+  <script is:inline>
+(function () {
+    try {
+      if (localStorage.getItem("jetfish-theme") === "light") {
+        document.documentElement.dataset.theme = "light";
+      }
+      var art = new URLSearchParams(location.search).get("art");
+      if (art === "number" || art === "vinyl" || art === "staff") {
+        document.documentElement.dataset.lightChart = art;
+      }
+    } catch (error) {}
+  })();
+  </script>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png">
+</head>
+<body>
+<slot />
+<script is:inline>
+document.querySelectorAll("[data-copy]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var value = button.getAttribute("data-copy");
+      if (!navigator.clipboard) return;
+      navigator.clipboard.writeText(value).then(function () {
+        var label = button.textContent;
+        button.textContent = "Copied";
+        window.setTimeout(function () { button.textContent = label; }, 1400);
+      });
+    });
+  });
+  (function () {
+    var tabs = Array.prototype.slice.call(document.querySelectorAll(".bs-tab"));
+    var panels = Array.prototype.slice.call(document.querySelectorAll(".bs-panel"));
+    function select(index, focus) {
+      tabs.forEach(function (tab, i) {
+        tab.setAttribute("aria-selected", String(i === index));
+        tab.tabIndex = i === index ? 0 : -1;
+      });
+      panels.forEach(function (panel, i) { panel.hidden = i !== index; });
+      if (focus) tabs[index].focus();
+    }
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener("click", function () { select(i); });
+      tab.addEventListener("keydown", function (event) {
+        var next = null;
+        if (event.key === "ArrowRight") next = (i + 1) % tabs.length;
+        if (event.key === "ArrowLeft") next = (i - 1 + tabs.length) % tabs.length;
+        if (event.key === "Home") next = 0;
+        if (event.key === "End") next = tabs.length - 1;
+        if (next !== null) { event.preventDefault(); select(next, true); }
+      });
+    });
+  })();
+  document.querySelectorAll("[data-download]").forEach(function (link) {
+    link.addEventListener("click", function (event) {
+      event.preventDefault();
+      window.dispatchEvent(new CustomEvent("jetfish:download", {
+        detail: link.getAttribute("data-download") + " / v0.0.0"
+      }));
+    });
+  });
+</script>
+<script is:inline>
+(function () {
+    var root = document.documentElement;
+    var button = document.getElementById("themeToggle");
+    function sync() {
+      var light = root.dataset.theme === "light";
+      button.setAttribute("aria-label", light ? "Switch to dark theme" : "Switch to light theme");
+    }
+    button.addEventListener("click", function () {
+      var light = root.dataset.theme !== "light";
+      if (light) root.dataset.theme = "light";
+      else delete root.dataset.theme;
+      try { localStorage.setItem("jetfish-theme", light ? "light" : "dark"); } catch (error) {}
+      sync();
+      window.dispatchEvent(new CustomEvent("jetfish:theme", { detail: light ? "light" : "dark" }));
+    });
+    sync();
+  })();
+</script>
+<script>
+  import "../scene/bebop-scene.js";
+</script>
+<script is:inline src="/assets/js/vtty-mock.js"></script>
+<script is:inline src="/assets/js/bebop-lock.js"></script>
+</body>
+</html>

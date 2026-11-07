@@ -1,0 +1,12 @@
+node_modules/
+.pnpm-store/
+dist/
+.astro/
+target/
+coverage/
+*.tsbuildinfo
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store

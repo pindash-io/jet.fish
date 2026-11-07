@@ -1,0 +1,154 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base>
+
+<a class="visually-hidden" href="#main">Skip to content</a>
+<main class="bs-app" id="main">
+  <header class="bs-top">
+    <a class="bs-brand" href="/" aria-label="jet.fish Bebop console"><img class="bs-mark bs-mark-dark" src="/assets/img/logo-dark.svg" width="34" height="34" alt="" aria-hidden="true"><img class="bs-mark bs-mark-light" src="/assets/img/logo-light.svg" width="34" height="34" alt="" aria-hidden="true"><span>jet<span class="dot">.</span>fish</span></a>
+    <div class="bs-top-meta">
+      <nav class="bs-nav" aria-label="Docs, GitHub, and theme">
+        <a class="bs-docs" href="https://github.com/jet-fish/jet.fish#readme" target="_blank" rel="noopener noreferrer" aria-label="Docs (opens in a new tab)"></a>
+        <a class="bs-github" href="https://github.com/jet-fish/jet.fish" target="_blank" rel="noopener noreferrer" aria-label="jet.fish on GitHub (opens in a new tab)"></a>
+        <button class="bs-theme" id="themeToggle" type="button" aria-label="Switch to light theme"></button>
+      </nav>
+    </div>
+  </header>
+
+  <section class="bb-hero bs-main" id="top" aria-labelledby="bsTitle">
+    <div class="bs-left">
+      <div class="bs-lede">
+        <p class="bs-kicker"><svg class="bs-kicker-fish" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 9h2v6h-2zm-2-2h2v2h-2zm0 8h2v2h-2zm-6 2h6v2h-6zm0-12h6v2h-6zM2 7h2v10H2zm2 2h2v2H4zm0 4h2v2H4zm2-2h2v2H6zm2-2h2v2H8zm0 4h2v2H8zm2 2h2v2h-2zm0-8h2v2h-2zm5 3h2v2h-2z"/></svg>A native terminal for the long way home</p>
+        <h1 class="bs-title" id="bsTitle">See you Space <em>Cowboy.</em></h1>
+        <p class="bs-dek">A live session on the Bebop</p>
+      </div>
+
+      <div class="bs-install" id="download">
+      <svg class="bs-fish" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 9h2v6h-2zm-2-2h2v2h-2zm0 8h2v2h-2zm-6 2h6v2h-6zm0-12h6v2h-6zM2 7h2v10H2zm2 2h2v2H4zm0 4h2v2H4zm2-2h2v2H6zm2-2h2v2H8zm0 4h2v2H8zm2 2h2v2h-2zm0-8h2v2h-2zm5 3h2v2h-2z"/></svg>
+        <div class="bs-install-head">
+          <div class="bs-install-heading">
+            <span>Install</span>
+          </div>
+          <span class="bs-version">v0.0.0 <b>stable</b></span>
+        </div>
+        <!-- Downloads hidden until release.
+        <div class="bs-tabs" role="tablist" aria-label="Platform">
+          <button class="bs-tab" id="tab-macos" role="tab" aria-selected="true" aria-controls="panel-macos" tabindex="0" type="button">macOS</button>
+          <button class="bs-tab" id="tab-linux" role="tab" aria-selected="false" aria-controls="panel-linux" tabindex="-1" type="button">Linux</button>
+          <button class="bs-tab" id="tab-freebsd" role="tab" aria-selected="false" aria-controls="panel-freebsd" tabindex="-1" type="button">FreeBSD</button>
+          <button class="bs-tab" id="tab-windows" role="tab" aria-selected="false" aria-controls="panel-windows" tabindex="-1" type="button">Windows</button>
+        </div>
+        <div class="bs-panels">
+          <div class="bs-panel" id="panel-macos" role="tabpanel" aria-labelledby="tab-macos">
+            <a class="bs-dl-primary" href="#download" data-download="macOS universal">
+              <span class="bs-dl-icon" aria-hidden="true">↓</span>
+              <span class="bs-dl-copy"><b>Download for macOS</b><small>Universal .dmg · 24.6 MB</small></span>
+            </a>
+            <div class="bs-package-row">
+              <span>More builds</span>
+              <a href="#download" data-download="macOS arm64">Apple Silicon</a>
+              <a href="#download" data-download="macOS x64">Intel</a>
+            </div>
+            <div class="bs-install-command">
+              <span class="bs-brew-symbol" aria-hidden="true">$</span>
+              <code>brew install jetfish</code>
+              <button class="bs-copy" type="button" data-copy="brew install jetfish">Copy</button>
+            </div>
+          </div>
+
+          <div class="bs-panel" id="panel-linux" role="tabpanel" aria-labelledby="tab-linux" hidden>
+            <a class="bs-dl-primary" href="#download" data-download="Linux x86_64">
+              <span class="bs-dl-icon" aria-hidden="true">↓</span>
+              <span class="bs-dl-copy"><b>Download for Linux</b><small>AppImage · 21.2 MB</small></span>
+            </a>
+            <div class="bs-package-row">
+              <span>More builds</span>
+              <a href="#download" data-download="Linux .deb">.deb</a>
+              <a href="#download" data-download="Linux arm64">arm64</a>
+            </div>
+            <div class="bs-install-command">
+              <span class="bs-brew-symbol" aria-hidden="true">$</span>
+              <code>curl -fsSL jet.fish/install.sh | sh</code>
+              <button class="bs-copy" type="button" data-copy="curl -fsSL jet.fish/install.sh | sh">Copy</button>
+            </div>
+          </div>
+
+          <div class="bs-panel" id="panel-freebsd" role="tabpanel" aria-labelledby="tab-freebsd" hidden>
+            <a class="bs-dl-primary" href="#download" data-download="FreeBSD amd64">
+              <span class="bs-dl-icon" aria-hidden="true">↓</span>
+              <span class="bs-dl-copy"><b>Download for FreeBSD</b><small>tar.zst · 18.9 MB</small></span>
+            </a>
+            <div class="bs-package-row">
+              <span>More builds</span>
+              <a href="#download" data-download="FreeBSD pkg">pkg</a>
+              <a href="#download" data-download="FreeBSD arm64">arm64</a>
+            </div>
+            <div class="bs-install-command">
+              <span class="bs-brew-symbol" aria-hidden="true">$</span>
+              <code>pkg install jetfish</code>
+              <button class="bs-copy" type="button" data-copy="pkg install jetfish">Copy</button>
+            </div>
+          </div>
+
+          <div class="bs-panel" id="panel-windows" role="tabpanel" aria-labelledby="tab-windows" hidden>
+            <a class="bs-dl-primary" href="#download" data-download="Windows x64">
+              <span class="bs-dl-icon" aria-hidden="true">↓</span>
+              <span class="bs-dl-copy"><b>Download for Windows</b><small>exe · 22.4 MB</small></span>
+            </a>
+            <div class="bs-package-row">
+              <span>More builds</span>
+              <a href="#download" data-download="Windows .msi">.msi</a>
+              <a href="#download" data-download="Windows arm64">arm64</a>
+            </div>
+            <div class="bs-install-command">
+              <span class="bs-brew-symbol" aria-hidden="true">$</span>
+              <code>winget install jetfish</code>
+              <button class="bs-copy" type="button" data-copy="winget install jetfish">Copy</button>
+            </div>
+          </div>
+        </div>
+        -->
+        <div class="bs-coming-soon">Coming soon</div>
+      </div>
+    </div>
+
+    <div class="bs-right">
+      <div class="bs-instrument">
+      <div class="bs-view">
+        <div class="bs-view-head"><span>Viewport / outbound</span><span><b>Live</b> / 01</span></div>
+        <div class="bs-scene">
+          <div class="bb-space" aria-hidden="true">
+            <div class="bb-stage" id="bbStage" data-viewport="true" data-empty="true"></div>
+            <div class="bb-stars bb-stars--far"></div>
+            <div class="bb-stars bb-stars--near"></div>
+            <div class="bb-nebula"></div>
+          </div>
+          <div class="bb-scene-grid" aria-hidden="true"></div>
+          <div class="bs-staff" aria-hidden="true"><i></i><i></i><i></i><i></i><span class="bs-staff-time">4/4</span><span class="bs-staff-bar"></span></div>
+        </div>
+      </div>
+
+      <div class="bs-feed">
+        <div class="bs-feed-head"><span><b>TTY 01</b> / Demo</span></div>
+        <div class="bb-log vtty-host" id="vttyHost" role="log" aria-live="polite" aria-label="vtty terminal screen" tabindex="0"><span class="vtty-loading">booting vtty…</span></div>
+        <form class="bb-prompt" id="bbForm" autocomplete="off">
+          <label class="visually-hidden" for="bbInput">Type a command for the jet.fish Bebop console</label>
+          <span class="bb-user">jet@bebop</span>
+          <span class="bb-path">~/dev</span>
+          <span class="bb-symbol" aria-hidden="true">❯</span>
+          <input class="bb-input" id="bbInput" name="command" type="text" inputmode="text" enterkeyhint="go" spellcheck="false" autocapitalize="off" placeholder="type a command">
+        </form>
+        <div class="bs-hint"><span>Clear to reset</span></div>
+      </div>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="bs-status">
+    <span>© 2026 jet.fish</span>
+    <span class="right">See you space cowboy</span>
+  </footer>
+</main>
+</Base>
