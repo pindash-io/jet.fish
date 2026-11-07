@@ -5,10 +5,10 @@ Astro site for the Bebop console.
 ## Commands
 
 ```sh
-pnpm install
-pnpm dev       # dev server
-pnpm build     # static build
-pnpm preview   # preview build
+npm install
+npm run dev    # dev server
+npm run build  # static build
+npm run preview  # preview build
 ```
 
 ## Structure
