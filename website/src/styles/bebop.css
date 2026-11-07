@@ -1,9 +1,9 @@
 @font-face { font-family: "Departure Mono"; src: url("/assets/fonts/departure-mono/DepartureMono-1.500.woff2") format("woff2"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "Obel Mono"; src: url("/assets/fonts/obel-mono/ObelMono-VF.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
 @font-face { font-family: "Obel Mono"; src: url("/assets/fonts/obel-mono/ObelMono-Italic-VF.woff2") format("woff2"); font-weight: 100 900; font-style: italic; font-display: swap; }
-@font-face { font-family: "Lilex Nerd Font Mono"; src: url("/assets/fonts/lilex-nerd-font-mono/LilexNerdFontMono-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "Lilex Nerd Font Mono"; src: url("/assets/fonts/lilex-nerd-font-mono/LilexNerdFontMono-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
-@font-face { font-family: "Lilex Nerd Font Mono"; src: url("/assets/fonts/lilex-nerd-font-mono/LilexNerdFontMono-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Lilex"; src: url("/assets/fonts/lilex/Lilex-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Lilex"; src: url("/assets/fonts/lilex/Lilex-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Lilex"; src: url("/assets/fonts/lilex/Lilex-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
 
 :root {
   --bg: #05070d;
@@ -15,7 +15,7 @@
   --line: rgba(245, 237, 223, 0.13);
   --line-soft: rgba(245, 237, 223, 0.075);
   --pixel: "Departure Mono", monospace;
-  --mono: "Obel Mono", "Lilex Nerd Font Mono", ui-monospace, monospace;
+  --mono: "Obel Mono", "Lilex", ui-monospace, monospace;
   --mark-bg: #04060b;
   --mark-major: #1b4652;
   --mark-grid: rgba(119, 231, 255, 0.10);
@@ -1673,7 +1673,7 @@ html[data-theme="dark"] .bs-dl-primary:hover {
 .vtty-host pre.term .term-monitor,
 .vtty-host pre.term .monitor-frame,
 .vtty-host pre.term .monitor-row {
-  font-family: "Lilex Nerd Font Mono", var(--mono);
+  font-family: "Lilex", var(--mono);
 }
 
 .vtty-host pre.term .term-monitor {

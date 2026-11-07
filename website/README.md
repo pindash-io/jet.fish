@@ -22,6 +22,6 @@ pnpm preview   # preview build
 ## Licenses
 
 - [Departure Mono](public/assets/fonts/departure-mono/LICENSE.txt)
-- [Lilex Nerd Font Mono](public/assets/fonts/lilex-nerd-font-mono/LICENSE.txt)
+- [Lilex](public/assets/fonts/lilex/LICENSE.txt)
 - [Obel Mono](public/assets/fonts/obel-mono/LICENSE.txt)
 - [Pixelarticons](public/assets/icons/LICENSE.txt)
