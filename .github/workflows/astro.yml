@@ -55,10 +55,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
-      - name: Setup wasm-pack
-        uses: taiki-e/install-action@v2
-        with:
-          tool: wasm-pack
+      - name: Install wasm-pack
+        run: |
+          cargo install wasm-pack --version 0.15.1 --locked
       - name: Build
         run: make ci ASTRO_SITE="${{ steps.pages.outputs.origin }}" ASTRO_BASE="${{ steps.pages.outputs.base_path }}"
         working-directory: ${{ env.BUILD_PATH }}
