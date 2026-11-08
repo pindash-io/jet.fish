@@ -1,6 +1,10 @@
 # jet.fish
 
-Astro site for the Bebop console.
+A native terminal for the long way home
+
+**See you Space Cowboy.**
+
+A live session on the Bebop
 
 ## Commands
 
@@ -21,7 +25,12 @@ npm run preview  # preview build
 
 ## Licenses
 
+### Fonts
+
 - [Departure Mono](public/assets/fonts/departure-mono/LICENSE.txt)
 - [Lilex](public/assets/fonts/lilex/LICENSE.txt)
 - [Obel Mono](public/assets/fonts/obel-mono/LICENSE.txt)
-- [Pixelarticons](public/assets/icons/LICENSE.txt)
+
+### Icons
+
+- [Pixelart](public/assets/icons/LICENSE.txt)

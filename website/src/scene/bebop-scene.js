@@ -151,7 +151,7 @@ import { mulberry32 } from "math/random";
         star += stars(p + vec2(-3.1, t * 0.002), 89.0, 13.8, t) * 0.35;
         col += vec3(0.92, 0.96, 1.0) * star;
 
-        vec2 starP = vec2(-0.42, 0.27);
+        vec2 starP = vec2(0.42, 0.27);
         float starD = length(p - starP);
         float starCore = smoothstep(0.017, 0.0, starD);
         float starHalo = smoothstep(0.1, 0.0, starD) * 0.1;

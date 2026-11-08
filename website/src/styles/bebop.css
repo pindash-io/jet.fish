@@ -49,7 +49,6 @@ a { color: inherit; }
 }
 
 .bs-app {
-  width: min(1480px, 100%);
   min-height: calc(100svh - 36px);
   margin: 0 auto;
   display: grid;
