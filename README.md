@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/logo.svg" alt="jet.fish: A native terminal for the long way home" width="168" height="168" />
+<img src="assets/logo-dark.svg" alt="jet.fish: A native terminal for the long way home" width="168" height="168" />
 
 # jet.fish
 
