@@ -59,7 +59,7 @@ jobs:
         run: |
           cargo install wasm-pack --version 0.15.1 --locked
       - name: Build
-        run: make ci ASTRO_SITE="${{ steps.pages.outputs.origin }}" ASTRO_BASE="${{ steps.pages.outputs.base_path }}"
+        run: make ci ASTRO_SITE="${{ steps.pages.outputs.origin }}" ASTRO_BASE="/"
         working-directory: ${{ env.BUILD_PATH }}
 
       - name: Upload artifact
