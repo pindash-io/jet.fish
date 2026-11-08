@@ -44,7 +44,7 @@
   var chart = function (tone, text) { return span("chart-" + tone, text); };
 
   var prompt = function () {
-    return cyan("jet@bebop") + " " + muted("~/dev") + " " + amber("❯");
+    return cyan("jet@bebop") + " " + muted("~") + " " + amber("❯");
   };
 
   var intro = function () {
