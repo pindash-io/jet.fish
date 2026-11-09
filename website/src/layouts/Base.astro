@@ -16,7 +16,9 @@ const description = "A native terminal for the long way home. A live session on 
   <script is:inline>
 (function () {
     try {
-      if (localStorage.getItem("jetfish-theme") === "light") {
+      var saved = localStorage.getItem("jetfish-theme");
+      var prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+      if (saved === "light" || (!saved && prefersLight)) {
         document.documentElement.dataset.theme = "light";
       }
       var art = new URLSearchParams(location.search).get("art");
@@ -79,9 +81,20 @@ document.querySelectorAll("[data-copy]").forEach(function (button) {
 (function () {
     var root = document.documentElement;
     var button = document.getElementById("themeToggle");
+    var media = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+    function savedTheme() {
+      try { return localStorage.getItem("jetfish-theme"); } catch (error) { return null; }
+    }
     function sync() {
       var light = root.dataset.theme === "light";
       button.setAttribute("aria-label", light ? "Switch to dark theme" : "Switch to light theme");
+    }
+    function followSystem(event) {
+      var saved = savedTheme();
+      if (saved === "light" || saved === "dark") return;
+      if (event.matches) root.dataset.theme = "light";
+      else delete root.dataset.theme;
+      sync();
     }
     button.addEventListener("click", function () {
       var light = root.dataset.theme !== "light";
@@ -91,6 +104,10 @@ document.querySelectorAll("[data-copy]").forEach(function (button) {
       sync();
       window.dispatchEvent(new CustomEvent("jetfish:theme", { detail: light ? "light" : "dark" }));
     });
+    if (media) {
+      if (media.addEventListener) media.addEventListener("change", followSystem);
+      else if (media.addListener) media.addListener(followSystem);
+    }
     sync();
   })();
 </script>

@@ -13,6 +13,7 @@
   --cyan: #77e7ff;
   --muted: #8fa3b1;
   --line: rgba(245, 237, 223, 0.13);
+  --divider: #24262b;
   --line-soft: rgba(245, 237, 223, 0.075);
   --pixel: "Departure Mono", monospace;
   --mono: "Obel Mono", "Lilex", ui-monospace, monospace;
@@ -229,7 +230,6 @@ html[data-theme="light"] .bs-mark-light { display: block; }
 .bb-prompt {
   display: flex;
   align-items: center;
-  gap: 8px;
   padding: 9px 12px;
   border-top: 1px solid var(--line-soft);
   color: var(--muted);
@@ -238,10 +238,10 @@ html[data-theme="light"] .bs-mark-light { display: block; }
   line-height: 1.4;
   overflow: hidden;
 }
-.bb-user { color: var(--cyan); white-space: nowrap; }
+.bb-user { margin-right: 8px; color: var(--cyan); white-space: nowrap; }
 .bb-path { color: #738795; white-space: nowrap; }
 .bb-path::before { content: ":"; color: #556a77; }
-.bb-symbol { color: var(--amber); }
+.bb-symbol { margin-right: 8px; color: var(--amber); }
 .bb-input {
   flex: 1;
   min-width: 0;
@@ -1151,12 +1151,12 @@ html[data-theme="light"] .bs-mark-light { display: block; }
   width: 16px;
   height: 16px;
   background-color: currentColor;
-  -webkit-mask: url("/assets/icons/sun.svg") center / 16px 16px no-repeat;
-  mask: url("/assets/icons/sun.svg") center / 16px 16px no-repeat;
+  -webkit-mask: url("/assets/icons/moon.svg") center / 16px 16px no-repeat;
+  mask: url("/assets/icons/moon.svg") center / 16px 16px no-repeat;
 }
 html[data-theme="light"] .bs-theme {
-  -webkit-mask-image: url("/assets/icons/moon.svg");
-  mask-image: url("/assets/icons/moon.svg");
+  -webkit-mask-image: url("/assets/icons/sun.svg");
+  mask-image: url("/assets/icons/sun.svg");
 }
 .bs-theme:hover { color: var(--cream); }
 .bs-theme:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
@@ -1846,7 +1846,7 @@ html:not([data-theme="light"]) .bb-scene-grid {
     bottom: 0;
     left: 0;
     width: 1px;
-    background: var(--line);
+    background: var(--divider);
     pointer-events: none;
     z-index: 8;
   }
@@ -1912,4 +1912,14 @@ html:not([data-theme="light"]) .bb-scene-grid {
   .vtty-host pre.term .term-monitor {
     font-size: 11px;
   }
+}
+
+.bb-scene-grid {
+  background-image:
+    linear-gradient(#77e7ff 1px, transparent 1px),
+    linear-gradient(90deg, #77e7ff 1px, transparent 1px);
+  opacity: 0.055;
+}
+html:not([data-theme="light"]) .bb-scene-grid {
+  opacity: 0.12;
 }

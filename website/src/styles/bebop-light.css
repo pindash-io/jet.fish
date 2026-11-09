@@ -8,6 +8,7 @@ html[data-theme="light"] {
   --cyan: #5f6b46;
   --muted: #5e615b;
   --line: rgba(23, 27, 30, 0.22);
+  --divider: #c8c8c5;
   --line-soft: rgba(23, 27, 30, 0.1);
   --vtty-cell-w: 8.4px;
   --vtty-cell-h: 16.8px;
@@ -715,16 +716,6 @@ html[data-theme="light"][data-light-chart="staff"] .bs-staff i:nth-child(4) {
   right: calc(var(--vtty-cell-w) * 10);
   bottom: calc(var(--vtty-cell-h) * 10);
 }
-html[data-theme="light"][data-light-chart="staff"] .bs-staff-time {
-  position: absolute;
-  right: calc(var(--vtty-cell-w) * 34);
-  bottom: calc(var(--vtty-cell-h) * 10);
-  color: rgba(22, 22, 22, 0.32);
-  font-family: var(--mono);
-  font-size: 7px;
-  letter-spacing: 0.04em;
-  line-height: 1;
-}
 html[data-theme="light"][data-light-chart="staff"] .bs-staff-bar {
   position: absolute;
   right: calc(var(--vtty-cell-w) * 5);
@@ -793,12 +784,6 @@ html[data-theme="light"][data-light-chart="staff"] .bs-staff i:nth-child(4) {
   right: auto;
   bottom: auto;
   left: calc(var(--vtty-cell-w) * 28);
-}
-html[data-theme="light"][data-light-chart="staff"] .bs-staff-time {
-  top: calc(var(--vtty-cell-h) * 2);
-  right: auto;
-  bottom: auto;
-  left: 0;
 }
 html[data-theme="light"][data-light-chart="staff"] .bs-staff-bar {
   top: 0;
@@ -1037,4 +1022,11 @@ html[data-theme="light"][data-light-chart="staff"] .bs-staff i:nth-child(4)::aft
   html[data-theme="light"][data-light-chart="staff"] .bs-staff i::after {
     animation: none;
   }
+}
+
+html[data-theme="light"] .bb-scene-grid {
+  background-image:
+    linear-gradient(#161616 1px, transparent 1px),
+    linear-gradient(90deg, #161616 1px, transparent 1px);
+  opacity: 0.045;
 }
