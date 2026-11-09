@@ -238,7 +238,7 @@ html[data-theme="light"] .bs-mark-light { display: block; }
   line-height: 1.4;
   overflow: hidden;
 }
-.bb-user { margin-right: 8px; color: var(--cyan); white-space: nowrap; }
+.bb-user { color: var(--cyan); white-space: nowrap; }
 .bb-path { color: #738795; white-space: nowrap; }
 .bb-path::before { content: ":"; color: #556a77; }
 .bb-symbol { margin-right: 8px; color: var(--amber); }
