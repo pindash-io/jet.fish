@@ -109,9 +109,9 @@
     }
     if (name === "monitor") {
       var authored = document.documentElement.getAttribute("data-monitor") === "authored";
-      var core = authored ? 76 : randomInt(38, 92);
-      var fuel = authored ? 42 : randomInt(24, 97);
-      var bounty = authored ? 3 : randomInt(1, 9);
+      var core = randomInt(38, 92);
+      var fuel = randomInt(24, 97);
+      var bounty = randomInt(1, 9);
       var bountyFill = Math.round(17 * bounty / 10);
       var bountyBar = "█".repeat(bountyFill) + "▉".repeat(17 - bountyFill);
       var boxV = '<span class="muted box-v">│</span>';
