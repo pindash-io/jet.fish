@@ -17,23 +17,17 @@
     } catch (error) {}
 
     var line = document.createElement("div");
-    line.className = "bs-lockline";
+    line.className = "bs-linkline";
     line.setAttribute("aria-hidden", "true");
 
-    var label = document.createElement("span");
-    label.className = "lock-label";
-    label.textContent = "uplink";
-
     var bars = document.createElement("span");
-    bars.className = "lock-bars";
+    bars.className = "link-bars";
     bars.textContent = "▁▁▁";
 
     var state = document.createElement("span");
-    state.className = "lock-state";
-    state.textContent = "linking";
+    state.className = "link-state";
+    state.textContent = "connecting";
 
-    line.appendChild(label);
-    line.appendChild(document.createTextNode("  "));
     line.appendChild(bars);
     line.appendChild(document.createTextNode("  "));
     line.appendChild(state);
@@ -41,26 +35,26 @@
     host.insertBefore(line, term);
 
     var input = document.getElementById("bbInput");
-    var locked = false;
+    var connected = false;
 
-    function lock() {
-      if (locked) return;
-      locked = true;
+    function connect() {
+      if (connected) return;
+      connected = true;
       bars.textContent = "▂▄▆";
-      state.textContent = "locked";
-      line.classList.add("is-locked");
+      state.textContent = "connected";
+      line.classList.add("is-connected");
     }
 
     var frames = ["▂▁▁", "▂▄▁", "▂▄▆"];
     var i = 0;
     function step() {
-      if (locked) return;
+      if (connected) return;
       if (i < frames.length) {
         bars.textContent = frames[i];
         i += 1;
         setTimeout(step, 150);
       } else {
-        lock();
+        connect();
       }
     }
 
@@ -69,7 +63,7 @@
     }
 
     if (reduce) {
-      lock();
+      connect();
     } else if (document.readyState === "complete") {
       begin();
     } else {

@@ -1,5 +1,5 @@
 
-.bs-lockline {
+.bs-linkline {
   display: block;
   height: var(--vtty-cell-h, 16.8px);
   margin: 0;
@@ -11,19 +11,19 @@
   white-space: pre;
   font-variant-ligatures: none;
 }
-.bs-lockline .lock-bars {
+.bs-linkline .link-bars {
   color: var(--cyan);
   opacity: 0.78;
 }
-.bs-lockline .lock-state {
+.bs-linkline .link-state {
   color: var(--muted);
   transition: color 240ms var(--ease-out, ease-out);
 }
-.bs-lockline.is-locked .lock-state {
+.bs-linkline.is-connected .link-state {
   color: var(--cream);
 }
 @media (prefers-reduced-motion: reduce) {
-  .bs-lockline .lock-state {
+  .bs-linkline .link-state {
     transition: none;
   }
 }
