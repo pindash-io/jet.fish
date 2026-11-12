@@ -19,11 +19,12 @@ compact_str = { version = "0.10.0", default-features = false }
 foldhash = "0.2"
 glam = "0.34"
 hashbrown = { version = "0.17.1", default-features = false, features = ["default-hasher"] }
-hotpath = { version = "0.30.2", default-features = false, features = ["hotpath", "hotpath-alloc", "hotpath-cpu"] }
 memchr = "2"
 rustix = "1"
 serde = { version = "1", features = ["derive"] }
 smallvec = { version = "2.0.0-beta.4", features = ["std"] }
+
+hotpath = { version = "0.30.2", default-features = false, features = ["hotpath", "hotpath-alloc", "hotpath-cpu"] }
 
 [workspace.lints]
 rust.keyword_idents_2024 = "forbid"
