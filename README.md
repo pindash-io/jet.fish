@@ -8,9 +8,13 @@ A native terminal for the long way home
 
 **See you Space Cowboy.**
 
-A live session on the Bebop
-
 </div>
+
+## Crates
+
+| crate | purpose |
+| --- | --- |
+| [`jetfish_protocol`](crates/jetfish_protocol) | screen-agnostic protocol primitives: cell-width model, SGR spans/attributes, grid geometry, palette |
 
 ## License
 
