@@ -68,12 +68,8 @@ impl Attrs {
         SgrFlags::from_bits_retain((self.0 & STYLE_MASK) as u16)
     }
 
-    /// The span-level [`SgrFlags`] for layout, with `INVERSE` excluded.
-    ///
-    /// The cell screen applies SGR 7 inverse at RGB level in `resolve_fg`/
-    /// `resolve_bg` (the colors are already swapped), so a span built from
-    /// this pen must NOT carry `INVERSE` — otherwise the layout would swap
-    /// the already-effective colors again.
+    /// The span-level [`SgrFlags`], with `INVERSE` excluded (the cell screen
+    /// resolves SGR 7 at RGB level, so a span must not re-swap).
     #[inline]
     pub const fn span_flags(self) -> SgrFlags {
         self.flags().difference(SgrFlags::INVERSE)
@@ -242,10 +238,7 @@ impl Attrs {
         self.with_flag(SgrFlags::INVERSE, on)
     }
 
-    /// Set or clear a style flag. Clearing [`SgrFlags::UNDERLINE`] also
-    /// drops the stored underline style — the direct-pen mirror of
-    /// [`Style::apply_flags`] so the cell screen applies SGR without the
-    /// `to_style`/`from_style` round-trip.
+    /// Set or clear a style flag; clearing `UNDERLINE` also drops its style.
     #[must_use]
     #[inline]
     pub fn apply_flags(mut self, f: SgrFlags, on: bool) -> Self {
@@ -276,11 +269,8 @@ impl Attrs {
     }
 }
 
-/// A read-only snapshot of a style's raw SGR state: the fg/bg palette ids,
-/// the style flags, and the underline style/color. The shared shape the cell
-/// screen's packed [`Attrs`] pen, the line screen's flat `cur_fg`/`cur_bg`/
-/// `sgr`/`underline_*` fields, and the line screen's [`crate::Span`] style
-/// all project to, so shared helpers take one value instead of five.
+/// A style's raw SGR state (fg/bg/flags/underline); the shared projection
+/// for the packed and flat pens.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Style {
     /// Foreground palette id.
@@ -319,15 +309,13 @@ impl Style {
     }
 
     /// Build a color-only view (fg/bg/flags) with the underline fields
-    /// defaulted — for [`crate::resolve_colors`]/`decrqss_sgr`, which only
-    /// read the colors.
+    /// defaulted.
     #[inline]
     pub const fn colors(fg: ColorId, bg: ColorId, flags: SgrFlags) -> Self {
         Self::new(fg, bg, flags, UnderlineStyle::None, None)
     }
 
-    /// Set or clear a style flag. Clearing [`SgrFlags::UNDERLINE`] (SGR 24)
-    /// also drops the stored underline style, not just the flag.
+    /// Set or clear a style flag; clearing `UNDERLINE` also drops its style.
     #[inline]
     pub fn apply_flags(mut self, f: SgrFlags, on: bool) -> Self {
         if on {
@@ -383,9 +371,8 @@ impl Attrs {
         self.style_with(self.flags())
     }
 
-    /// Project the packed pen to the [`Style`] used for spans: like
-    /// [`to_style`](Self::to_style) but with [`span_flags`](Self::span_flags)
-    /// (INVERSE excluded — the cell screen resolves it at RGB level).
+    /// Project the pen to the span [`Style`] (like [`to_style`](Self::to_style)
+    /// but with INVERSE excluded).
     #[must_use]
     #[inline]
     pub const fn to_span_style(self) -> Style {
@@ -403,8 +390,7 @@ impl Attrs {
         )
     }
 
-    /// Rebuild the packed pen from its raw [`Style`] (inverse of
-    /// [`Attrs::to_style`]).
+    /// Rebuild the pen from its raw [`Style`].
     #[must_use]
     #[inline]
     pub fn from_style(style: Style) -> Self {

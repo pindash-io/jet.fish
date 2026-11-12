@@ -95,18 +95,15 @@ impl TabStops {
         if i == 0 { None } else { Some(self.0[i - 1]) }
     }
 
-    /// The next stop strictly after `pos`, clamped to `limit`; `None` when the
-    /// cursor is already at/right of `limit` (CHT stops there). Shared by both
-    /// screens' `forward_tab` — the cell grid calls it with its 0-based right
-    /// margin, the line screen with its resolved 0-based right margin.
+    /// The next stop after `pos`, clamped to `limit`; `None` at/right of
+    /// `limit` (CHT stops there).
     #[inline]
     pub fn next_clamped(&self, pos: usize, limit: usize) -> Option<usize> {
         (pos < limit).then(|| self.next(pos).map_or(limit, |s| s.min(limit)))
     }
 
-    /// The last stop strictly before `pos`, clamped to `limit`; `None` when the
-    /// cursor is already at/left of `limit` (CBT stops there). Shared by both
-    /// screens' `backward_tab`.
+    /// The last stop before `pos`, clamped to `limit`; `None` at/left of
+    /// `limit` (CBT stops there).
     #[inline]
     pub fn prev_clamped(&self, pos: usize, limit: usize) -> Option<usize> {
         (pos > limit).then(|| self.prev(pos).map_or(limit, |s| s.max(limit)))

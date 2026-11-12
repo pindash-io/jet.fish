@@ -15,9 +15,7 @@ pub fn percent_decode(bytes: &[u8]) -> String {
         }
     }
     let mut out = Vec::with_capacity(bytes.len());
-    // Split on `%`: every segment after the first is preceded by a `%`. If it
-    // starts with two hex digits, that `%XX` decodes to one byte; otherwise
-    // the `%` was literal and is pushed back in front of the segment.
+    // Split on `%`: a valid `%XX` prefix decodes; an invalid `%` is literal.
     let mut parts = bytes.split(|&b| b == b'%');
     if let Some(first) = parts.next() {
         out.extend(first);

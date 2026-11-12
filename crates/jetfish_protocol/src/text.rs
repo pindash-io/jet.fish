@@ -11,9 +11,8 @@ use core::range::Range;
 /// character collapses to that single cell.
 pub const WORD_BOUNDARIES: &str = "\0 \t'\"│`|:;,()[]{}<>$";
 
-/// Double-click word bounds for cell column `col` in `line`: inclusive
-/// `(left_col, right_col)` using the [`WORD_BOUNDARIES`] separator list. A
-/// boundary-character click collapses to that single cell.
+/// Double-click word bounds for column `col` (inclusive), using
+/// [`WORD_BOUNDARIES`].
 pub fn semantic_word_bounds(line: &str, col: usize) -> (usize, usize) {
     let byte = crate::cell_col_byte(line, col);
     let mut left = 0_usize;
@@ -39,9 +38,8 @@ pub fn semantic_word_bounds(line: &str, col: usize) -> (usize, usize) {
     (left_col, right_col)
 }
 
-/// Clamp a byte offset down to the nearest char boundary (`floor`). A stale
-/// cursor/line range (a mid-text mutation that hasn't re-synced) can land
-/// inside a multi-byte glyph, which would panic on slicing — floor it first.
+/// Clamp a byte offset down to the nearest char boundary (a stale mid-glyph
+/// offset would panic on slicing).
 #[inline]
 pub fn floor_char_boundary(s: &str, mut i: usize) -> usize {
     i = i.min(s.len());
@@ -51,7 +49,7 @@ pub fn floor_char_boundary(s: &str, mut i: usize) -> usize {
     i
 }
 
-/// Clamp a byte offset up to the nearest char boundary (`ceil`).
+/// Clamp a byte offset up to the nearest char boundary.
 #[inline]
 pub fn ceil_char_boundary(s: &str, mut i: usize) -> usize {
     i = i.min(s.len());
@@ -61,11 +59,7 @@ pub fn ceil_char_boundary(s: &str, mut i: usize) -> usize {
     i
 }
 
-/// Byte ranges of every line in `text` (split on `\n`).
-///
-/// `memchr`'s byte search is SIMD-accelerated; count first to pre-size the
-/// vec (no geometric realloc churn), then one more SIMD pass to build the
-/// ranges.
+/// Byte ranges of every line (split on `\n`).
 pub fn text_line_ranges(text: &str) -> Vec<Range<usize>> {
     let newlines = memchr::memchr_iter(b'\n', text.as_bytes()).count();
     let mut ranges = Vec::with_capacity(newlines + 1);
@@ -84,7 +78,6 @@ pub fn line_start_byte(text: &str, line_index: usize) -> usize {
     if line_index == 0 {
         return 0;
     }
-    // memchr's SIMD newline scan; only the first `line_index` newlines matter.
     memchr::memchr_iter(b'\n', text.as_bytes())
         .nth(line_index - 1)
         .map_or_else(|| text.len(), |i| i + 1)

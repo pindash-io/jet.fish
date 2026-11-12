@@ -3,13 +3,8 @@
 
 //! Byte↔cell width helpers shared by the line screen and its spans.
 
-/// The byte offset just past the trailing width-0 marks (VS16/VS15/ZWJ/
-/// combining) that begin at `byte`, stopping at the first width>0 char or a
-/// newline. Used when `byte` already sits PAST a base (e.g. a wide glyph's
-/// first cell): extends to the cluster tail. The widths come from the WHOLE
-/// `text` (not the `text[byte..]` suffix) so a ZWJ-sequence continuation
-/// (`👍+ZWJ+👍` → widths `[2,0,0]`) is seen as 0-width, not re-scored as a
-/// standalone 2-cell 👍.
+/// The byte offset just past the trailing width-0 marks at `byte`. Widths
+/// come from the whole `text` so a ZWJ continuation stays 0-width.
 #[inline]
 pub fn grapheme_tail_end(text: &str, byte: usize) -> usize {
     grapheme_tail_end_from_widths(text, &crate::cell_widths(text), byte)
@@ -24,25 +19,14 @@ pub use vtty_width::{
     grapheme_end_from_widths, grapheme_tail_end_from_widths,
 };
 
-/// Display cell width of a char (CJK / fullwidth / wide glyphs = 2, else 1).
-/// nvim's grid and CUP/CHA columns count CELLS, not chars, so a CJK char
-/// occupies two columns; without this the cursor/content drift by one cell
-/// per wide char (nvim49 CJK preview misalignment + residue).
-///
-/// Uses Unicode's `East_Asian_Width` property from icu4x instead of a hand-rolled
-/// range table. Delegates to [`crate::cell_width`] (the single source of
-/// truth shared with the cell screen), falling back to 0 for control chars.
-///
-/// Spec §Layer 1: the totalization $`w_1^0(c)` = `w_1(c)` \lor 0$ —
-/// `w₁ = vtty_width::cell_width` with `⊥ ↦ 0`.
+/// Display cell width of a char (wide/CJK = 2, else 1), 0 for control chars.
+/// Delegates to [`crate::cell_width`].
 #[inline]
 pub fn char_cell_width(c: char) -> usize {
     crate::cell_width(c).unwrap_or(0)
 }
 
-/// Display cell width of a whole line.
-///
-/// Spec §Layer 2: $\sum `w_2`$ — the sum of the per-run DFA width vector.
+/// Display cell width of a line.
 #[inline]
 pub fn line_cell_width(line: &str) -> usize {
     // `cell_width_sum` is a single allocation-free pass with its own ASCII
@@ -50,21 +34,15 @@ pub fn line_cell_width(line: &str) -> usize {
     crate::cell_width_sum(line)
 }
 
-/// Byte offset (into `line`) of the given 0-based CELL column, clamped to the
-/// line end. Delegates to [`vtty_width::cell_col_byte_widths`] — the single
-/// source of truth (floor semantics: a column on a wide char's SECOND cell
-/// maps back to its START).
+/// Byte offset of a cell column, clamped to the line end (floor semantics:
+/// a wide char's second cell maps to its start).
 #[inline]
 pub fn cell_col_byte(line: &str, cell_col: usize) -> usize {
     vtty_width::cell_col_byte_widths(line, cell_col)
 }
 
-/// The char covering 0-based cell column `col` in a logical row's text.
-///
-/// Wide chars occupy two cells: their leading column returns the char and
-/// their continuation column returns `' '` (the blank trailer cell). Returns
-/// `None` past the end of the row. A control/zero-width char is treated as
-/// one cell so the walk always advances.
+/// The char covering cell column `col`; a wide char's continuation cell
+/// returns `' '`, `None` past the row.
 #[inline]
 pub fn row_cell_char(text: &str, col: usize) -> Option<char> {
     let mut cell = 0_usize;

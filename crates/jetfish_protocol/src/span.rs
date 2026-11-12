@@ -31,10 +31,8 @@ impl Span {
         self.range.contains(&byte)
     }
 
-    /// Effective foreground: SGR 5 blink paints the background color while
-    /// the blink phase is OFF (the glyph is invisible), matching
-    /// [`Spans::style_at`]. `blink` is the caller's blink phase — passed in
-    /// (not read from the global) so this stays `const`/pure.
+    /// Effective foreground: SGR 5 blink paints the background while the
+    /// blink phase is OFF. `blink` is the caller's phase (kept `const`/pure).
     #[inline]
     pub const fn effective_fg(&self, blink: bool) -> ColorId {
         if self.style.flags.contains(SgrFlags::BLINK) && !blink {
@@ -45,12 +43,8 @@ impl Span {
     }
 }
 
-/// The screen's sorted SGR color spans. A thin wrapper over `Vec<Span>` that
-/// `Deref`/`DerefMut`s to the Vec, so every existing operation (`push`,
-/// `insert`, `iter`, `retain`, `splice`, …) stays transparent, while the
-/// byte-addressed lookups ([`Self::span_at`] and friends) remain free functions
-/// over `&[Span]`. The sorted-by-start invariant is owned by this type, not
-/// re-documented at every call site.
+/// The screen's sorted SGR color spans: a `Vec<Span>` wrapper that adds
+/// byte-addressed lookups and owns the sorted-by-start invariant.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Spans(Vec<Span>);
 
@@ -60,11 +54,8 @@ impl Spans {
         Self(Vec::new())
     }
 
-    /// The span covering `byte`, or `None` when `byte` falls in a gap between
-    /// spans. Spans are sorted by start (see `LineScreen::normalize_spans`),
-    /// so this is a binary search — `O(log n)` — and the covering span is the
-    /// last one whose start is `<= byte` and whose half-open range still
-    /// contains it.
+    /// The span covering `byte` (`None` in a gap). Sorted by start, so this
+    /// is a binary search.
     #[inline]
     pub fn span_at(&self, byte: usize) -> Option<&Span> {
         // `partition_point` returns the index of the first span starting after
@@ -114,10 +105,8 @@ impl Spans {
         })
     }
 
-    /// The spans overlapping `[start, end)` — a binary-searched window, since
-    /// spans are normalized (sorted by `start`, non-overlapping, so `end` is
-    /// also sorted). A long session accumulates thousands of spans while each
-    /// layout only touches the ~55 visible lines.
+    /// The spans overlapping `[start, end)`: a binary-searched window over
+    /// the sorted spans.
     #[inline]
     pub fn overlapping(
         &self,
@@ -128,9 +117,7 @@ impl Spans {
         self[first..].iter().take_while(move |sp| sp.range.start < end)
     }
 
-    /// Hash the SGR spans overlapping `[start, end)`, so a color/style-only
-    /// change (nvim tab switch redraws the same text with a different SGR) is
-    /// detected even though the line text is unchanged.
+    /// Hash the overlapping spans, so a color/style-only change is detected.
     pub fn hash_for_range(&self, start: usize, end: usize) -> u64 {
         use std::hash::{Hash, Hasher};
         let mut h = crate::new_hasher();
@@ -146,11 +133,8 @@ impl Spans {
         h.finish()
     }
 
-    /// Hash of only the shaping-relevant span properties for a byte range:
-    /// span boundaries + bold/italic/dim flags. Colors, blink, underline, and
-    /// other decorations don't change glyph positions, so a color-only change
-    /// reuses the cached shaped layout (fg/bg are re-applied per glyph
-    /// afterwards).
+    /// Hash only the shaping-relevant properties (boundaries + bold/italic/
+    /// dim), so a color-only change reuses the shaped layout.
     pub fn shape_hash_for_range(&self, start: usize, end: usize) -> u64 {
         use std::hash::{Hash, Hasher};
         let mut h = crate::new_hasher();

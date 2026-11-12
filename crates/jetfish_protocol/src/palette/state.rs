@@ -63,22 +63,17 @@ impl core::ops::IndexMut<u32> for InternTable {
 pub struct Palette {
     /// id → packed 0xRRGGBB.
     entries: Vec<u32>,
-    /// Direct-mapped RGB → id (best-effort dedup): `Index`/`IndexMut` by RGB
-    /// do the slot masking. No hash, no growth, no rehash.
+    /// Direct-mapped RGB → id (best-effort dedup).
     intern: InternTable,
     /// Themed default colors (OSC 10/11), `None` = engine default.
     default_colors: DefaultColors,
-    /// 256-bit set: which palette indices the user overrode via OSC 4.
-    /// Preserved across [`Palette::regenerate_from_theme`] and resets.
+    /// Which indices the user overrode via OSC 4.
     mask: [u64; 4],
 }
 
 impl Palette {
-    /// A fresh palette: 256 xterm colors + unset default fg/bg.
-    ///
-    /// The extended palette (16..256) is the standard xterm cube. Call
-    /// [`Palette::regenerate_from_theme`] to generate it from the base16
-    /// theme instead.
+    /// A fresh palette: 256 xterm colors + unset defaults (the standard
+    /// xterm cube).
     pub fn new() -> Self {
         let mut entries = Vec::with_capacity(258);
         entries.extend_from_slice(&crate::palette::base16::base16_palette());
@@ -95,12 +90,8 @@ impl Palette {
         }
     }
 
-    /// Regenerate the extended palette (16..256) from the current base16 +
-    /// fg/bg using the color256 algorithm. Opt-in; the default is the
-    /// standard xterm cube.
-    ///
-    /// Entries the user overrode via OSC 4 (tracked in the mask) are
-    /// preserved; only unmasked extended entries are regenerated.
+    /// Regenerate the extended palette (16..256) from base16 + fg/bg; OSC 4
+    /// overrides (the mask) are preserved.
     pub fn regenerate_from_theme(&mut self, harmonious: bool) {
         let base16: [u32; 16] = self.entries[..16].try_into().unwrap();
         let bg = self.default_colors.bg.unwrap_or(DEFAULT_BG);
@@ -130,9 +121,8 @@ impl Palette {
         self.mask[idx >> 6] &= !(1_u64 << (idx & 63));
     }
 
-    /// Intern an RGB truecolor, returning its id (deduplicated while the
-    /// color is still in the direct-mapped table). Collisions evict; dedup
-    /// is memory-only, so an evicted color just gets a fresh id.
+    /// Intern an RGB truecolor, returning its deduplicated id (collisions
+    /// evict).
     #[inline]
     pub fn insert_rgb(&mut self, rgb: u32) -> ColorId {
         let rgb = rgb & 0x00FF_FFFF;
@@ -211,11 +201,8 @@ impl Palette {
         self.mask_unset(idx);
     }
 
-    /// Reset all xterm entries to theme defaults (OSC 104).
-    ///
-    /// The themed default fg/bg (OSC 10/11) are NOT touched — those are
-    /// reset separately by OSC 110/111 via [`Palette::set_default_fg`] /
-    /// [`Palette::set_default_bg`].
+    /// Reset all xterm entries to theme defaults (OSC 104); the OSC 10/11
+    /// defaults are untouched.
     pub fn reset(&mut self) {
         self.entries.truncate(258);
         self.entries[..16]

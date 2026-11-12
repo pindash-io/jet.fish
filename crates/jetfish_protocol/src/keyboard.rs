@@ -7,12 +7,8 @@
 //! `KeyModes`, `KeySpec`) lives in `vtty_core` alongside `KittyFlags`; the
 //! winit-typed encoders live in `jetfish_runtime`.
 
-/// Encode a mouse event under the given tracking configuration, converting
-/// 0-based cell coordinates to pixels under DEC 1016 (SGR-pixel). `cell` is
-/// the whole-pixel grid cell size. Returns `None` when tracking is off.
-///
-/// Shared by the cell screen's test encoder and the engine shell's
-/// `Term::encode_input_mouse`.
+/// Encode a mouse event under `tracking` (DEC 1016 converts cells to pixels).
+/// `None` when tracking is off.
 pub fn encode_mouse_report(
     button: crate::MouseButton,
     tracking: crate::MouseTracking,

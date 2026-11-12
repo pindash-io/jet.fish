@@ -16,18 +16,15 @@ use crate::Margins;
 use crate::ScrollRegion;
 use crate::USizeVec2;
 
-/// The absolute index of the first visible line.
-///
-/// The main screen keeps scrollback above the visible grid, so its viewport
-/// starts at `nlines - rows`; a fixed grid (alt screen) or unbounded growth
-/// (`rows == 0`) starts at line `0`.
+/// The absolute index of the first visible line: `nlines - rows` on the main
+/// screen (scrollback above), `0` on a fixed grid.
 #[inline]
 pub const fn viewport_start(nlines: usize, rows: usize, fixed: bool) -> usize {
     if fixed || rows == 0 { 0 } else { nlines.saturating_sub(rows) }
 }
 
-/// Map a 0-based **viewport row** to an **absolute line index**: the row is
-/// offset by the viewport start (the scrollback), clamped to the last line.
+/// Map a viewport row to an absolute line index (offset by scrollback,
+/// clamped to the last line).
 #[inline]
 pub fn viewport_row(
     nlines: usize,
@@ -38,13 +35,9 @@ pub fn viewport_row(
     (viewport_start(nlines, rows, fixed) + row).min(nlines.saturating_sub(1))
 }
 
-/// Resolve the **absolute** `[top, bottom]` bounds of the DECSTBM scroll
-/// region.
-///
-/// `scroll` is the 0-based viewport-relative region; on the main screen it is
-/// offset by the scrollback. Both bounds are clamped to `[0, last]`, and a
-/// degenerate region (`top > bottom`) collapses to the top row so the
-/// `y >= x` invariant always holds.
+/// Resolve the absolute DECSTBM `[top, bottom]` bounds: offset by scrollback
+/// on the main screen, clamped to `[0, last]`; a degenerate region collapses
+/// to the top row.
 #[inline]
 pub fn scroll_bounds(
     nlines: usize,
@@ -59,82 +52,56 @@ pub fn scroll_bounds(
     ScrollRegion::new(v.x, v.y.max(v.x))
 }
 
-/// The 0-based inclusive limit for cursor motion toward **higher** indices
-/// (down or right).
-///
-/// xterm CUD/CUF: when the cursor is at/before the
-/// DECSTBM/DECSLRM region edge it stops there; past the edge it runs to the
-/// screen's last line/column.
+/// The inclusive limit for motion toward higher indices (down/right): the
+/// region edge when at/inside it, else the screen edge.
 #[inline]
 pub const fn high_limit(pos: usize, region: usize, screen: usize) -> usize {
     if pos <= region { region } else { screen }
 }
 
-/// The 0-based inclusive limit for cursor motion toward **lower** indices
-/// (up or left).
-///
-/// xterm CUU/CUB: when the cursor is at/after the
-/// DECSTBM/DECSLRM region edge it stops there; before the edge it runs to the
-/// screen's first line/column.
+/// The inclusive limit for motion toward lower indices (up/left): the region
+/// edge when at/after it, else the screen edge.
 #[inline]
 pub const fn low_limit(pos: usize, region: usize, screen: usize) -> usize {
     if pos >= region { region } else { screen }
 }
 
-/// Clamp a 0-based cursor COLUMN to the grid's right edge `[0, last_col]`.
-/// Cursor columns are `usize` (never negative), so this is the upper clamp
-/// (`col.min(last_col)`); the named helper documents the intent at the
-/// CUP/CHA/DECSTBM/scroll call sites (the cell screen's `x.min(last_col)`).
+/// Clamp a cursor column to `[0, last_col]` (columns are `usize`, so only
+/// the upper bound clamps).
 #[inline]
 pub fn clamp_col(col: usize, last_col: usize) -> usize {
     col.min(last_col)
 }
 
-/// Clamp a 0-based cursor ROW to the grid's bottom edge `[0, last_row]`.
-/// Cursor rows are `usize` (never negative), so this is the upper clamp;
-/// the named helper documents the intent at the CUP/scroll/DECRC call sites
-/// (the cell screen's `y.min(last_line_index)`).
+/// Clamp a cursor row to `[0, last_row]`.
 #[inline]
 pub fn clamp_row(row: usize, last_row: usize) -> usize {
     row.min(last_row)
 }
 
-/// Whether the DECSTBM scroll region covers the **whole viewport**.
-///
-/// `top == 0` and `bottom >= rows - 1` (0-based inclusive) is the power-on
-/// default region; the streaming scrollback fast path keys off it.
+/// Whether the scroll region covers the whole viewport (`top == 0 &&
+/// bottom >= rows - 1`); the streaming scrollback fast path keys off this.
 #[inline]
 pub const fn is_full_viewport(scroll: ScrollRegion, rows: usize) -> bool {
     scroll.x == 0 && scroll.y >= rows.saturating_sub(1)
 }
 
-/// Clamp a 0-based inclusive pair `(a, b)` to `[0, max]`, returning `None` for
-/// a degenerate pair (`a >= b`). Both DECSTBM scroll regions and DECSLRM
-/// margins reject a degenerate region and clamp their high bound.
+/// Clamp `(a, b)` to `[0, max]`; `None` when `a >= b` (a degenerate region).
 #[inline]
 pub fn clamp_pair(a: usize, b: usize, max: usize) -> Option<USizeVec2> {
     let b = b.min(max);
     (a < b).then_some(USizeVec2::new(a, b))
 }
 
-/// Whether a 0-based cursor column is OUTSIDE the DECSLRM horizontal margins.
-///
-/// The DEC STD 070 gate: LF/RI at the scroll-region edge do nothing when the
-/// cursor column is outside `[margin.x, margin.y]`.
+/// Whether a cursor column is outside the DECSLRM horizontal margins.
 #[inline]
 pub const fn outside_margins(col0: usize, margin: Margins) -> bool {
     col0 < margin.x || col0 > margin.y
 }
 
-/// Whether a LF/RI at the DECSTBM region boundary may proceed given the
-/// DECSLRM horizontal margins.
-///
-/// With DECLRMM off the margins are conceptually full-width, but `margin` is
-/// NOT refreshed on resize while the mode is off, so a stale `margin` must not
-/// gate the motion — `margin_active` (`lrm_mode`) is required and this returns
-/// `true` whenever it is false. With DECLRMM on the region is the rectangle
-/// `[left..=right] × [top..=bottom]` and the cursor column must be inside
-/// `[margin.x, margin.y]` (DEC STD 070 / xterm).
+/// Whether LF/RI may proceed given the DECSLRM margins. With DECLRMM off a
+/// stale `margin` must not gate the motion, so `margin_active` is required and
+/// this returns `true` when it is false.
 #[inline]
 pub const fn inside_margins(
     margin_active: bool,
@@ -166,13 +133,9 @@ pub enum VerticalMotion {
     Noop,
 }
 
-/// Line-feed (LF / IND / VT / FF) disposition.
-///
-/// `at_bottom` is the caller's "cursor at the region bottom" test: the
-/// streaming line screen is bottom-anchored (`row >= bottom`), the fixed cell
-/// grid uses `row == bottom` and clamps below-region motion itself. `inside`
-/// is [`inside_margins`]; `grow` is `is_full_viewport(scroll, rows) &&
-/// !is_alt` — the main screen's full-viewport region grows scrollback.
+/// Line-feed (LF / IND / VT / FF) disposition. `at_bottom` is the caller's
+/// "cursor at the region bottom" test; `inside` is [`inside_margins`]; `grow`
+/// is the main screen's full-viewport region.
 #[inline]
 pub const fn line_feed(
     at_bottom: bool,
@@ -191,9 +154,8 @@ pub const fn line_feed(
     VerticalMotion::Scroll
 }
 
-/// Reverse-index (RI) disposition. `at_top` is the caller's "cursor at the
-/// region top" test (line screen: `row <= top`; cell grid: `row == top`).
-/// RI never grows scrollback, so it yields `Scroll`/`Move`/`Noop` only.
+/// Reverse-index disposition. `at_top` is the caller's "cursor at the region
+/// top" test; RI never grows scrollback.
 #[inline]
 pub const fn reverse_index(at_top: bool, inside: bool) -> VerticalMotion {
     if at_top {
@@ -203,10 +165,8 @@ pub const fn reverse_index(at_top: bool, inside: bool) -> VerticalMotion {
     }
 }
 
-/// Offset a 1-based viewport-relative cursor `(col, row)` by the DECOM origin
-/// — the DECSTBM scroll-region top and the DECSLRM left margin (both 0-based)
-/// — clamped to at least `(1, 1)`: the DSR `CSI 6n` position under origin
-/// mode.
+/// Offset a 1-based cursor by the DECOM origin (scroll top + left margin),
+/// clamped to at least `(1, 1)`.
 #[inline]
 pub fn origin_offset(
     pos: CursorPos,
@@ -219,18 +179,15 @@ pub fn origin_offset(
     )
 }
 
-/// Clamp a 1-based cursor position to the grid `[1, cols] × [1, rows]`
-/// (inclusive) with one vectorized `min` against `grid.max(ONE)` — the
-/// SIMD-friendly form of the grid-bounds check; a degenerate `grid` of `(0, 0)`
-/// clamps to `(1, 1)`.
+/// Clamp a 1-based cursor to the grid `[1, cols] × [1, rows]`; a degenerate
+/// `(0, 0)` grid clamps to `(1, 1)`.
 #[inline]
 pub fn clamp_to_grid(pos: CursorPos, grid: Grid) -> CursorPos {
     pos.min(grid.max(CursorPos::ONE))
 }
 
-/// The cursor home position after a DECSTBM/DECSLRM change: the viewport
-/// top-left normally, or the origin
-/// (scroll-region top / left margin) under DECOM. Returns 0-based absolute
+/// The cursor home after a DECSTBM/DECSLRM change: viewport top-left, or the
+/// origin (scroll top / left margin) under DECOM. Returns 0-based absolute
 /// `(col, row)`.
 #[inline]
 pub const fn origin_home(
@@ -246,6 +203,7 @@ pub const fn origin_home(
     }
 }
 
+/// Clamp a 0-based inclusive DECRQCRA rectangle to the page size.
 pub fn clamp_rect_to_page(
     top: usize,
     left: usize,

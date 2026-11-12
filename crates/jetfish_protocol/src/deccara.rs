@@ -15,9 +15,8 @@ const ATTR_ALL: SgrFlags = SgrFlags::from_bits_retain(
         | SgrFlags::INVERSE.bits(),
 );
 
-/// Normalize the SGR params after the four rectangle coordinates into a
-/// `(mask, value)` pair. `set` selects DECCARA (set/clear) vs DECRARA
-/// (toggle). Returns `None` for a no-op (empty DECRARA).
+/// Normalize the rectangle SGR params into a `(mask, value)` pair (`set` =
+/// DECCARA, `!set` = DECRARA); `None` for a no-op.
 pub fn rect_attr_mask(
     attrs: &[i32],
     set: bool,

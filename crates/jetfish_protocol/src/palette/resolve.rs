@@ -12,7 +12,7 @@ use crate::{ColorId, SgrFlags, Style, rgba_to_u32, u32_to_rgba};
 use super::state::Palette;
 
 /// Resolve a cell/span's effective fg/bg RGB, applying the SGR modifiers in
-/// the canonical order (reverse → bold→bright → resolve → faint/invisible/
+/// the canonical order (reverse → bold → bright → resolve → faint/invisible/
 /// inverse).
 #[inline]
 pub fn resolve_colors(
