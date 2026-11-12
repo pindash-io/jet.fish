@@ -1,0 +1,31 @@
+[package]
+name = "jetfish_protocol"
+description = "Terminal protocol: Command/Apply, cell-width model, SGR spans, and theme."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[features]
+default = ["simd"]
+simd = ["vtty_width/simd", "vtty/simd-transcode"]
+hotpath = ["dep:hotpath"]
+
+[dependencies]
+vtty.workspace = true
+vtty_width.workspace = true
+
+color.workspace = true
+foldhash.workspace = true
+glam.workspace = true
+hashbrown.workspace = true
+memchr.workspace = true
+rustix.workspace = true
+smallvec.workspace = true
+serde.workspace = true
+compact_str.workspace = true
+bitflags.workspace = true
+hotpath = { workspace = true, optional = true }
+
+[lints]
+workspace = true
