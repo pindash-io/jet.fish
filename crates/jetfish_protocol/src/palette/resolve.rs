@@ -8,7 +8,6 @@
 
 use crate::attrs::{apply_sgr_effects, bold_to_bright, reverse_colors};
 use crate::{ColorId, SgrFlags, Style, rgba_to_u32, u32_to_rgba};
-
 use super::state::Palette;
 
 /// Resolve a cell/span's effective fg/bg RGB, applying the SGR modifiers in

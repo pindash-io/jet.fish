@@ -20,6 +20,7 @@
 pub use compact_str::{CompactString, format_compact};
 /// Terminal grid dimensions in cells: `x = columns`, `y = rows`.
 pub use glam::USizeVec2;
+
 pub use vtty::{
     Charset, Charsets, ColorId, ColorSpec, CursorStyle, DEFAULT_BG_ID,
     DEFAULT_FG_ID, Key, KeyEncoding, KeyEventKind, KeyLocation, KeyModes,
@@ -36,6 +37,7 @@ pub use vtty_width::{
     cjk_width, composes_precomposed, first_non_ascii, pua_fast_width,
     set_cjk_width, width_and_standalone, width_and_standalone_with,
 };
+
 /// A terminal grid size in cells: `.x` = columns, `.y` = rows.
 pub type Grid = USizeVec2;
 
@@ -95,7 +97,6 @@ pub const DEFAULT_FLAGS: TermFlags = TermFlags::CURSOR_VISIBLE
 pub type WakeCallback = std::sync::Arc<dyn Fn() + Send + Sync>;
 /// Shared slot holding the current wake callback.
 pub type WakeSlot = std::sync::Arc<std::sync::Mutex<Option<WakeCallback>>>;
-
 
 #[allow(missing_docs)]
 pub mod attrs;
@@ -160,7 +161,6 @@ pub use palette::{
 pub mod keyboard;
 pub use keyboard::{AltScreenSwitch, alt_screen_action, encode_mouse_report};
 pub use uri::{cwd_path, percent_decode};
-
 
 #[allow(missing_docs)]
 pub mod hash;

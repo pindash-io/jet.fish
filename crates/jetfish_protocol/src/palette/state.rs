@@ -6,7 +6,6 @@
 //! insertion.
 
 use crate::{ColorId, DEFAULT_BG_ID, DEFAULT_FG_ID};
-
 use crate::palette::base16::{DEFAULT_BG, DEFAULT_FG};
 
 /// Direct-mapped intern table size (power of two). Dedup is best-effort: a
