@@ -9,10 +9,15 @@ rust-version = "1.96"
 license = "MIT"
 
 [workspace.dependencies]
-# vtty — the byte parser and cell-width model (git, pindash-io/vtty).
+# jetfish* — internal workspace crates.
+jetfish_protocol = { path = "crates/jetfish_protocol" }
+jetfish_notify = { path = "crates/jetfish_notify" }
+
+# vtty* — the byte parser and cell-width model (git, pindash-io/vtty).
 vtty = { git = "https://github.com/pindash-io/vtty.git", features = ["simd-transcode"] }
 vtty_width = { git = "https://github.com/pindash-io/vtty.git" }
 
+# Required crates
 bitflags = "2"
 color = "0.3"
 compact_str = { version = "0.10.0", default-features = false }
@@ -24,6 +29,7 @@ rustix = "1"
 serde = { version = "1", features = ["derive"] }
 smallvec = { version = "2.0.0-beta.4", features = ["std"] }
 
+# Optional crates
 hotpath = { version = "0.30.2", default-features = false, features = ["hotpath", "hotpath-alloc", "hotpath-cpu"] }
 
 [workspace.lints]

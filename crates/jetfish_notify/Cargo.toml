@@ -1,0 +1,12 @@
+[package]
+name = "jetfish_notify"
+description = "OSC 9/99/777 desktop-notification parsing."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true
