@@ -1,0 +1,32 @@
+[package]
+name = "jetfish_image"
+description = "Image protocol decoders: Sixel, kitty graphics, and iTerm2."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+fearless_simd.workspace = true
+glam.workspace = true
+hashbrown.workspace = true
+
+bases = { workspace = true, optional = true }
+compact_str = { workspace = true, optional = true }
+flate2 = { workspace = true, optional = true }
+image = { workspace = true, optional = true }
+png = { workspace = true, optional = true }
+
+[features]
+default = ["kitty", "iterm2", "sixel", "simple"]
+kitty = ["dep:bases", "dep:flate2"]
+iterm2 = ["dep:bases", "dep:compact_str"]
+sixel = []
+simple = ["dep:png"]
+png = ["dep:image", "image/png"]
+jpeg = ["dep:image", "image/jpeg"]
+gif = ["dep:image", "image/gif"]
+webp = ["dep:image", "image/webp"]
+
+[lints]
+workspace = true
