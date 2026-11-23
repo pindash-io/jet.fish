@@ -1,0 +1,17 @@
+[package]
+name = "jetfish_config"
+description = "App configuration: the ~/.config/jetfish/config.toml format."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+jetfish_protocol.workspace = true
+
+compact_str = { workspace = true, features = ["serde"] }
+serde = { workspace = true, features = ["derive"] }
+toml_edit = { workspace = true, features = ["serde"] }
+
+[lints]
+workspace = true
