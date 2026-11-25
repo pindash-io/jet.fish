@@ -1,0 +1,26 @@
+[package]
+name = "jetfish_command"
+description = "Terminal command model: Command enum, Apply contract, parsers, codec."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[features]
+default = ["kitty", "iterm2"]
+kitty = ["jetfish_image/kitty"]
+iterm2 = ["jetfish_image/iterm2"]
+
+[dependencies]
+jetfish_image.workspace = true
+jetfish_protocol.workspace = true
+
+vtty.workspace = true
+
+bases.workspace = true
+compact_str.workspace = true
+glam.workspace = true
+smallvec.workspace = true
+
+[lints]
+workspace = true
