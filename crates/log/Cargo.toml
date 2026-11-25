@@ -1,0 +1,14 @@
+[package]
+name = "jetfish_log"
+description = "The JETFISH_LOG diagnostic logger."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+compact_str.workspace = true
+fastrace.workspace = true
+
+[lints]
+workspace = true
