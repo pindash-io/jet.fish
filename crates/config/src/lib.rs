@@ -3,7 +3,7 @@
 
 //! App configuration: compiled constants + the `~/.config/jetfish/config.toml`
 //! file format and loading. Every config key is optional; absent keys keep
-//! the compiled default (or the `JETFISH_*` env override).
+//! the compiled default.
 
 use std::path::{Path, PathBuf};
 
@@ -21,8 +21,11 @@ pub use window::Window;
 
 /// Points → logical px (macOS 72 DPI = 1:1; elsewhere 96/72). The engine
 /// multiplies by the window scale factor for physical px.
-pub const POINT_TO_PX: f32 =
-    if cfg!(target_os = "macos") { 1.0 } else { 96.0 / 72.0 };
+pub const POINT_TO_PX: f32 = if cfg!(target_os = "macos") {
+    1.0
+} else {
+    96.0 / 72.0
+};
 
 /// The default window background color (paper cream #FFFCF0).
 pub const BACKGROUND_COLOR: [f32; 4] = [1.0, 0.9882, 0.9412, 1.0];
@@ -76,16 +79,11 @@ impl Config {
     /// A syntactically invalid document falls back to all defaults.
     fn from_toml(text: &str, path: &Path) -> Self {
         let Ok(doc) = text.parse::<toml_edit::DocumentMut>() else {
-            eprintln!(
-                "jetfish: ignoring invalid config {path:?}: not valid TOML"
-            );
+            eprintln!("jetfish: ignoring invalid config {path:?}: not valid TOML");
             return Self::default();
         };
         Self {
-            theme: doc
-                .get("theme")
-                .and_then(parse_section)
-                .unwrap_or_default(),
+            theme: doc.get("theme").and_then(parse_section).unwrap_or_default(),
             font: doc.get("font").and_then(parse_section).unwrap_or_default(),
             window: doc
                 .get("window")
@@ -114,9 +112,7 @@ impl Config {
 /// Deserialize a TOML table section into `T`, returning `None` on a type
 /// mismatch so the caller keeps the default for that section. Unknown keys
 /// inside the section are ignored (the structs no longer deny them).
-pub(crate) fn parse_section<T: serde::de::DeserializeOwned>(
-    item: &toml_edit::Item,
-) -> Option<T> {
+pub(crate) fn parse_section<T: serde::de::DeserializeOwned>(item: &toml_edit::Item) -> Option<T> {
     toml_edit::de::from_str(&item.to_string()).ok()
 }
 
@@ -139,7 +135,10 @@ fn config_base_dir() -> PathBuf {
     if let Ok(dir) = std::env::var("JETFISH_CONFIG_DIR") {
         return PathBuf::from(dir);
     }
-    std::env::home_dir().unwrap_or_default().join(".config").join("jetfish")
+    std::env::home_dir()
+        .unwrap_or_default()
+        .join(".config")
+        .join("jetfish")
 }
 
 #[cfg(test)]

@@ -13,9 +13,9 @@ fn inline_theme_resolves() {
     "##)
         .unwrap();
     let resolved = cfg.theme.resolve(&[]);
-    assert_eq!(resolved.foreground, Some(0xffffff));
-    assert_eq!(resolved.background, Some(0x000000));
-    assert_eq!(resolved.ansi[1], 0xff0000);
+    assert_eq!(resolved.foreground, Some(0xffffffff));
+    assert_eq!(resolved.background, Some(0x000000ff));
+    assert_eq!(resolved.ansi[1], 0xff0000ff);
 }
 
 #[test]
@@ -52,7 +52,7 @@ fn from_toml_tolerates_invalid_keys_and_applies_valid_ones() {
     assert_eq!(cfg.font.size, 18.0);
     assert_eq!(cfg.window.opacity, 1.0, "invalid window section falls back");
     assert_eq!(cfg.debounce.interactive_gap_ms, 99);
-    assert_eq!(cfg.resolve_theme().foreground, Some(0xabcdef));
+    assert_eq!(cfg.resolve_theme().foreground, Some(0xabcdefff));
 }
 
 #[test]

@@ -5,11 +5,11 @@ use super::*;
 
 #[test]
 fn parse_hex_handles_hash_and_bare() {
-    assert_eq!(parse_hex("#ff0000"), Some(0xff0000));
-    assert_eq!(parse_hex("ff0000"), Some(0xff0000));
-    assert_eq!(parse_hex("fff"), Some(0xffffff));
-    assert_eq!(parse_hex("#f00"), Some(0xff0000));
-    assert_eq!(parse_hex("#0af"), Some(0x00aaff));
+    assert_eq!(parse_hex("#ff0000"), Some(0xff0000ff));
+    assert_eq!(parse_hex("ff0000"), Some(0xff0000ff));
+    assert_eq!(parse_hex("fff"), Some(0xffffffff));
+    assert_eq!(parse_hex("#f00"), Some(0xff0000ff));
+    assert_eq!(parse_hex("#0af"), Some(0x00aaffff));
     assert_eq!(parse_hex("ff"), None);
 }
 
@@ -29,10 +29,10 @@ fn user_theme_dir_overrides_bundled() {
     )
     .unwrap();
     let resolved = cfg.theme.resolve(std::slice::from_ref(&dir));
-    assert_eq!(resolved.ansi[0], 0x111111);
-    assert_eq!(resolved.ansi[1], 0x222222);
+    assert_eq!(resolved.ansi[0], 0x111111ff);
+    assert_eq!(resolved.ansi[1], 0x222222ff);
     // inline foreground wins over the named theme
-    assert_eq!(resolved.foreground, Some(0xabcdef));
+    assert_eq!(resolved.foreground, Some(0xabcdefff));
 
     std::fs::remove_dir_all(&dir).unwrap();
 }

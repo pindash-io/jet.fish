@@ -12,7 +12,7 @@ use serde::Deserialize;
 #[derive(Deserialize, Default, Debug, Clone)]
 #[serde(default)]
 pub struct Theme {
-    /// A bundled theme name (`name = "Catppuccin Mocha"`), optional.
+    /// A bundled theme name (`name = "Flexoki Light"`), optional.
     pub name: Option<CompactString>,
     /// Default foreground, hex `#RRGGBB`.
     pub foreground: Option<CompactString>,
@@ -31,7 +31,7 @@ pub struct Theme {
     pub palette: Vec<CompactString>,
 }
 
-/// A resolved theme: the 16 packed `0xRRGGBB` ANSI colors + default fg/bg.
+/// A resolved theme: the 16 packed `0xRRGGBBAA` ANSI colors + default fg/bg.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ResolvedTheme {
     /// The 16 ANSI colors (index 0..15).
@@ -108,7 +108,7 @@ fn merge_theme(t: &Theme, resolved: &mut ResolvedTheme) {
 }
 
 /// Parse a `#RRGGBB` / `RRGGBB` hex string (or the 3-digit `#RGB` shorthand,
-/// expanded to `#RRGGBB`) into packed `0xRRGGBB`.
+/// expanded to `#RRGGBB`) into packed `0xRRGGBBAA` (opaque).
 pub(crate) fn parse_hex(s: &str) -> Option<u32> {
     let s = s.trim().trim_start_matches('#');
     let expanded: String = match s.len() {
@@ -116,7 +116,8 @@ pub(crate) fn parse_hex(s: &str) -> Option<u32> {
         3 => s.chars().flat_map(|c| [c, c]).collect(),
         _ => return None,
     };
-    u32::from_str_radix(&expanded, 16).ok()
+    let v = u32::from_str_radix(&expanded, 16).ok()?;
+    Some((v << 8) | 0xFF)
 }
 
 #[cfg(test)]
