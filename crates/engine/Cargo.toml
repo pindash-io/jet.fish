@@ -1,0 +1,20 @@
+[package]
+name = "jetfish_engine"
+description = "The TextEngine rendering contract between screens and the window."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+jetfish_protocol.workspace = true
+jetfish_text.workspace = true
+
+vtty.workspace = true
+
+compact_str.workspace = true
+glam.workspace = true
+vello_cpu.workspace = true
+
+[lints]
+workspace = true
