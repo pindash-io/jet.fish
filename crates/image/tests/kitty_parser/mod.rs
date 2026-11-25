@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use bases::Base64;
+use glam::UVec2;
 
-use super::*;
+use super::crop_rgba;
+use crate::kitty::KittyParser;
+use crate::parser::{ImageCtx, ImageParser, ParseOutcome, ParsedImage};
 
 #[test]
 fn crop_rgba_clamps_overflowing_extent() {
