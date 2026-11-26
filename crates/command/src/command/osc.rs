@@ -97,7 +97,7 @@ impl Osc<'_> {
         let num = |i: usize| {
             params
                 .get(i)
-                .and_then(|v| std::str::from_utf8(v).ok())
+                .and_then(|v| CompactString::from_utf8(v).ok())
                 .and_then(|s| s.parse::<usize>().ok())
         };
         let cmd = match params.first().copied()? {
@@ -352,7 +352,7 @@ fn parse_shell_prompt(params: &[&[u8]]) -> Option<ShellPrompt> {
         } else if let Some(v) = opt.strip_prefix(b"cmdline_url=") {
             cmdline = Some(percent_decode(v));
         } else if exit_code.is_none()
-            && let Ok(str) = std::str::from_utf8(opt)
+            && let Ok(str) = CompactString::from_utf8(opt)
             && let Ok(code) = str.parse::<i32>()
         {
             exit_code = Some(code);

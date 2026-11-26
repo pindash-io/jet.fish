@@ -4,8 +4,9 @@
 
 `jetfish_command` — the decoded command model plus the apply contract. The
 byte parser decodes into a [`Command`](https://docs.rs/jetfish_command/latest/jetfish_command/command/enum.Command.html), a screen applies it via
-[`Apply::apply`](https://docs.rs/jetfish_command/latest/jetfish_command/commands/trait.Apply.html#tymethod.apply); the crate owns the parsers, codec, [`Commands`](https://docs.rs/jetfish_command/latest/jetfish_command/commands/struct.Commands.html) buffer,
-and [`Recording`](https://docs.rs/vtty_core/latest/vtty_core/event/struct.Recording.html) log.
+[`Apply::apply`](https://docs.rs/jetfish_command/latest/jetfish_command/commands/trait.Apply.html#tymethod.apply); the crate owns the parsers, codec, [`Commands`](https://docs.rs/jetfish_command/latest/jetfish_command/commands/struct.Commands.html) buffer.
+
+<!-- cargo-rdme end -->
 
 ## License
 

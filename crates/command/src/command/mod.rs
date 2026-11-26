@@ -12,6 +12,8 @@ use vtty::{Charset, SgrFlags, TermFlags};
 
 use jetfish_protocol::{CursorPos, Progress};
 
+pub use vtty::Sgr;
+
 pub mod codec;
 mod csi;
 mod dcs;
@@ -22,8 +24,6 @@ mod marker;
 mod osc;
 mod sgr;
 mod shell_prompt;
-
-pub use vtty::Sgr;
 
 pub use csi::{Csi, CsiCtx};
 pub use dcs::Dcs;

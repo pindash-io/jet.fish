@@ -3,7 +3,7 @@
 
 //! OSC 133 shell-integration marker (`A`/`B`/`C`/`D`).
 
-use compact_str::CompactString;
+use compact_str::{CompactString, format_compact};
 use smallvec::SmallVec;
 
 use vtty::Event;
@@ -31,13 +31,13 @@ impl EncodeSeq for ShellPrompt {
         params.push(b"133".to_vec());
         params.push(vec![self.action]);
         if let Some(aid) = &self.aid {
-            params.push(format!("aid={aid}").into_bytes());
+            params.push(format_compact!("aid={aid}").into());
         }
         if let Some(cmdline) = &self.cmdline {
-            params.push(format!("cmdline_url={cmdline}").into_bytes());
+            params.push(format!("cmdline_url={cmdline}").into());
         }
         if let Some(code) = self.exit_code {
-            params.push(code.to_string().into_bytes());
+            params.push(code.to_string().into());
         }
         let mut out = Encoded::new();
         Event::OscDispatch { params, bell_terminated: false }

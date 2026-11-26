@@ -179,9 +179,19 @@ pub fn apply(
     highlight: &mut Highlight<u32>,
     ops: &[KittyColorOp],
 ) -> Option<CompactString> {
+    let mut entries = SmallVec::<ReplyEntry, 2>::new();
+
     for op in ops {
         match op {
-            KittyColorOp::Query(_) | KittyColorOp::Unknown(_) => {}
+            KittyColorOp::Query(key) => {
+                entries.push(ReplyEntry::Color(
+                    *key,
+                    resolve(*key, defaults, highlight, palette),
+                ));
+            }
+            KittyColorOp::Unknown(name) => {
+                entries.push(ReplyEntry::Unknown(name.clone()));
+            }
             KittyColorOp::Set { key, rgb: None } => match key {
                 // Dynamic: cursor takes the text color, selection reverses.
                 KittyColorKey::Cursor => defaults.cursor = defaults.fg,
@@ -192,23 +202,23 @@ pub fn apply(
                 // tracked / not allowed to be dynamic.
                 _ => {}
             },
-            &KittyColorOp::Set { key, rgb: Some(rgb) } => match key {
+            KittyColorOp::Set { key, rgb: Some(rgb) } => match key {
                 KittyColorKey::Foreground => {
-                    palette.set_default_fg(Some(rgb));
+                    palette.set_default_fg(Some(*rgb));
                 }
                 KittyColorKey::Background => {
-                    palette.set_default_bg(Some(rgb));
+                    palette.set_default_bg(Some(*rgb));
                 }
-                KittyColorKey::Cursor => defaults.cursor = rgb,
+                KittyColorKey::Cursor => defaults.cursor = *rgb,
                 KittyColorKey::CursorText => {}
                 KittyColorKey::SelectionBackground => {
-                    highlight.bg = Some(rgb);
+                    highlight.bg = Some(*rgb);
                 }
                 KittyColorKey::SelectionForeground => {
-                    highlight.fg = Some(rgb);
+                    highlight.fg = Some(*rgb);
                 }
                 KittyColorKey::Palette(index) => {
-                    palette.set_entry(index, rgb);
+                    palette.set_entry(*index, *rgb);
                 }
                 KittyColorKey::None => {}
             },
@@ -219,24 +229,12 @@ pub fn apply(
                 KittyColorKey::CursorText => {}
                 KittyColorKey::SelectionBackground => highlight.bg = None,
                 KittyColorKey::SelectionForeground => highlight.fg = None,
-                &KittyColorKey::Palette(index) => palette.reset_entry(index),
+                KittyColorKey::Palette(index) => palette.reset_entry(*index),
                 KittyColorKey::None => {}
             },
         }
     }
-    let entries: Vec<ReplyEntry> = ops
-        .iter()
-        .filter_map(|op| match op {
-            &KittyColorOp::Query(key) => Some(ReplyEntry::Color(
-                key,
-                resolve(key, defaults, highlight, palette),
-            )),
-            KittyColorOp::Unknown(name) => {
-                Some(ReplyEntry::Unknown(name.clone()))
-            }
-            _ => None,
-        })
-        .collect();
+
     reply(&entries)
 }
 
@@ -297,19 +295,19 @@ pub(crate) fn encode(ops: &[KittyColorOp]) -> SmallVec<u8, 8> {
                 out.extend_from_slice_copy(name.as_bytes());
                 out.extend_from_slice_copy(b"=?");
             }
-            &KittyColorOp::Query(key) => {
-                out.extend_from_slice_copy(key_wire(key).as_bytes());
+            KittyColorOp::Query(key) => {
+                out.extend_from_slice_copy(key_wire(*key).as_bytes());
                 out.extend_from_slice_copy(b"=?");
             }
-            &KittyColorOp::Set { key, rgb } => {
-                out.extend_from_slice_copy(key_wire(key).as_bytes());
+            KittyColorOp::Set { key, rgb } => {
+                out.extend_from_slice_copy(key_wire(*key).as_bytes());
                 out.push(b'=');
                 if let Some(rgb) = rgb {
-                    out.extend_from_slice_copy(rgb_wire(rgb).as_bytes());
+                    out.extend_from_slice_copy(rgb_wire(*rgb).as_bytes());
                 }
             }
-            &KittyColorOp::Reset(key) => {
-                out.extend_from_slice_copy(key_wire(key).as_bytes());
+            KittyColorOp::Reset(key) => {
+                out.extend_from_slice_copy(key_wire(*key).as_bytes());
             }
         }
     }

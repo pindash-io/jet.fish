@@ -3,8 +3,7 @@
 
 //! `jetfish_command` — the decoded command model plus the apply contract. The
 //! byte parser decodes into a [`Command`], a screen applies it via
-//! [`Apply::apply`]; the crate owns the parsers, codec, [`Commands`] buffer,
-//! and [`Recording`] log.
+//! [`Apply::apply`]; the crate owns the parsers, codec, [`Commands`] buffer.
 
 #![warn(missing_debug_implementations)]
 #![deny(missing_docs)]

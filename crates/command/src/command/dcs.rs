@@ -77,11 +77,11 @@ impl EncodeSeq for Dcs {
         // DCS params never carry colon separators in practice (the parser's
         // `hook` callback has no `sep`), so `Event::DcsHook` is a faithful
         // re-encoding.
-        let mut intermediates = SmallVec::<u8, 2>::new();
+        let mut intermediates = SmallVec::new();
         intermediates.extend_from_slice_copy(&self.ints);
         let mut out = Encoded::new();
         Event::DcsHook {
-            params: SmallVec::from(self.params.as_ref()),
+            params: self.params,
             intermediates,
             final_byte: self.final_byte,
         }

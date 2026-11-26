@@ -45,18 +45,6 @@ pub struct Csi<'a> {
     pub ctx: CsiCtx,
 }
 
-impl DecodeSeq for Csi<'_> {
-    fn decode(self) -> Option<Command> {
-        Self::parse(
-            self.params,
-            self.sep,
-            self.ints,
-            self.final_byte,
-            self.ctx,
-        )
-    }
-}
-
 impl Csi<'_> {
     /// Build a CSI sequence: `ESC [ <prefix ints> <params> <suffix ints> <final>`.
     /// Prefix intermediates (`?`, `>`, `=`, `<`) come before the params; suffix
@@ -89,6 +77,18 @@ impl Csi<'_> {
         }
         Csi { params, sep, ints: &ints, final_byte, ctx: CsiCtx::default() }
             .encode()
+    }
+}
+
+impl DecodeSeq for Csi<'_> {
+    fn decode(self) -> Option<Command> {
+        Self::parse(
+            self.params,
+            self.sep,
+            self.ints,
+            self.final_byte,
+            self.ctx,
+        )
     }
 }
 
@@ -294,8 +294,8 @@ impl Csi<'_> {
                     codes => {
                         let modes: Vec<TermFlags> = codes
                             .iter()
-                            .map(|&code| {
-                                TermFlags::from_mode_code(code, private)
+                            .map(|code| {
+                                TermFlags::from_mode_code(*code, private)
                             })
                             .filter(|m| !m.is_empty())
                             .collect();
