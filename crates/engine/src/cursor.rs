@@ -1,16 +1,12 @@
 // Copyright © Fangdun Tsai <fundon@pindash.io>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! Cursor rendering helpers shared by the terminal backends.
+//! Cursor rendering helpers.
 
 use crate::engine::{Primitive, PrimitiveKind};
 
 /// Invert the text glyphs in the cursor cell; solid rects and color/bitmap
-/// glyphs (emoji) are skipped — tinting a color glyph flashes it to the
-/// cursor's background. `text_color` recolors, `behind_color` becomes
-/// `bg_color` for the gamma-correct blend, `block_w` spans a wide cursor.
-/// Columns use `round` (not `floor`): a snapped x off the cell boundary
-/// would floor into the previous cell.
+/// glyphs (emoji) are skipped.
 pub fn invert_cursor_cell(
     glyphs: &mut [Primitive],
     row: usize,

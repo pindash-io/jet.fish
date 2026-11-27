@@ -22,10 +22,9 @@ fn large_bursts_need_the_quiet_gap() {
 
 #[test]
 fn one_shot_large_bursts_are_streaming_but_settle_fast() {
-    // A one-shot large burst (paste, TUI redraw, picker frame) is
-    // classified streaming (throttle 150ms), but the unified 16ms settle
-    // repaints it one frame after it goes quiet — the settle, not the
-    // classifier, is what makes paste/prompt/TUI feel immediate.
+    // A one-shot large burst (paste, TUI redraw, picker frame) is classified
+    // streaming, but the 16ms settle repaints it one frame after it goes quiet
+    // — the settle, not the classifier, is what makes paste/prompt feel fast.
     let d = Debounce::default();
     assert!(!d.is_interactive(std::time::Duration::from_millis(1), 1024));
     assert!(!d.is_interactive(std::time::Duration::from_millis(10), 4096));

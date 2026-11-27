@@ -39,8 +39,7 @@ pub struct SpawnConfig<'a> {
 }
 
 /// The runtime-pluggable screen backend factory: builds an engine from the
-/// shared spawn config. The cell screen is the first backend; a second (line)
-/// screen plugs in here by adding one more impl.
+/// shared spawn config.
 pub trait ScreenBackend: Sync {
     /// Spawn an engine for the surface.
     fn spawn(&self, config: &SpawnConfig<'_>) -> Result<Engine>;

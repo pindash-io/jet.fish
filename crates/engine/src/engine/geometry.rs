@@ -16,10 +16,8 @@ pub trait Geometry: Rendering {
         0.0
     }
 
-    /// The RAW buffer height (every line, including trailing blanks). Used
-    /// for the bottom-anchor `content_overflows` flag, which must NOT flip
-    /// when a TUI's `CSI J` erase blanks its list (that would toggle the
-    /// y-shift and make the box jump between top and bottom).
+    /// The raw buffer height (every line, including trailing blanks) for the
+    /// bottom-anchor `content_overflows` flag.
     fn raw_full_height(&self) -> f32 {
         self.full_height()
     }
@@ -34,9 +32,8 @@ pub trait Geometry: Rendering {
         false
     }
 
-    /// Whether a TUI just exited and the anchor is being held so the shell's
-    /// prompt redraw doesn't re-anchor the content down (ghostty keeps the
-    /// position).
+    /// Whether a TUI just exited and the anchor is held so the shell's
+    /// prompt redraw doesn't re-anchor the content down.
     fn post_tui(&self) -> bool {
         false
     }

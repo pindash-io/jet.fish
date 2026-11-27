@@ -18,8 +18,8 @@ pub use selection::{CellPoint, Selection};
 /// Re-exported so the GPU pipeline keeps one import.
 pub use jetfish_text::{Primitive, PrimitiveKind};
 
-/// The engine contract: a marker over the five facets. Implement the facets
-/// you need; the rest fall back to their defaults.
+/// The engine: a marker over the five facets (Rendering, Input, Geometry,
+/// Lifecycle, Selection).
 pub trait TextEngine<K: Default, E>:
     Rendering + Input<Keyboard = K, Event = E> + Geometry + Lifecycle + Selection
 {

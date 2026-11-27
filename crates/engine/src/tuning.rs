@@ -13,23 +13,20 @@ pub const SCROLLBACK_LINES: usize = 5_000;
 /// but never below this — a tiny limit must not archive every chunk.
 pub const SCROLLBACK_BURST_TRIM_MIN: usize = 1_024;
 
-/// Batch the final trim: let the in-memory ring grow this many lines past
-/// the limit before trimming, so the O(ring) re-anchor + arena rebuild are
-/// amortized over many lines instead of running on every poll of a full ring.
+/// Batch the final trim: let the ring grow this many lines past the limit
+/// before trimming (amortizes the O(ring) re-anchor + arena rebuild).
 pub const SCROLLBACK_TRIM_BATCH: usize = 512;
 
 /// Maximum disk-archived lines; once full, overflow is dropped (head
 /// retention). Override with `JETFISH_SCROLLBACK_DISK_LIMIT`.
 pub const SCROLLBACK_DISK_LIMIT: usize = 100_000;
 
-/// Coalesce window for input, one frame (~60fps). A one-shot burst (key
-/// echo, paste, prompt, TUI redraw) repaints one frame after it goes quiet;
-/// a continuous stream never settles and instead hits the throttle.
+/// Coalesce window for input, one frame. A one-shot burst repaints one frame
+/// after it goes quiet; a continuous stream hits the throttle instead.
 pub const INTERACTIVE_SETTLE_MS: u64 = 16;
 
-/// Coalesce window for the MAIN-screen SIGWINCH (ghostty-style, ~one frame).
-/// The first resize arms a one-shot timer; the child gets the LATEST size when
-/// it fires, so the redraw follows the drag live but no faster than this.
+/// Coalesce window for the MAIN-screen SIGWINCH (~one frame). The first
+/// resize arms a one-shot timer; the child gets the LATEST size.
 pub const SIGWINCH_COALESCE_MS: u64 = 25;
 
 /// Default cursor style (vertical bar).

@@ -158,8 +158,7 @@ fn wide_cursor_inverts_both_columns() {
 }
 
 /// A COLOR glyph (emoji) in the cursor cell must NOT be tinted — a color
-/// glyph samples its own RGBA, so re-coloring it flashes it to the
-/// cursor's background color.
+/// glyph samples its own RGBA, so re-coloring flashes it to the cursor bg.
 #[test]
 fn color_glyph_is_not_tinted_by_the_cursor() {
     let mut glyphs = [Primitive {
@@ -191,9 +190,8 @@ fn color_glyph_is_not_tinted_by_the_cursor() {
     assert_eq!(glyphs[0].bg_color, [0.0; 4]);
 }
 
-/// A right-column braille dot has a large left bearing: its INK origin
-/// sits in the next cell, so the cursor's column match must use the PEN
-/// (`pos.x - bearing_x`), not the ink origin.
+/// A right-column braille dot has a large left bearing: its INK origin sits in
+/// the next cell, so the cursor match must use the PEN (`pos.x - bearing_x`).
 #[test]
 fn right_column_braille_dot_is_not_inverted_by_the_neighbour_cursor() {
     let mut glyphs = [Primitive {

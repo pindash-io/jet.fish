@@ -47,11 +47,9 @@ pub trait Input {
     /// Report a focus change.
     fn report_focus(&mut self, _focused: bool) {}
 
-    /// Set whether this surface's cursor renders as active (solid + blinking).
-    /// The window layer folds the OS window focus AND the split-pane focus
-    /// into this one flag, so only the single active pane is active at a time.
-    /// Distinct from `report_focus` (the OS window focus + DEC 1004 report):
-    /// activation is visual-only and never emits a DEC 1004 report.
+    /// Set whether this surface's cursor renders active (solid + blinking);
+    /// the window layer folds OS-window + split-pane focus into it. Distinct
+    /// from `report_focus` (visual-only, never emits DEC 1004).
     fn set_activated(&mut self, _activated: bool) {}
 
     /// Show the cursor; resets the blink timer.

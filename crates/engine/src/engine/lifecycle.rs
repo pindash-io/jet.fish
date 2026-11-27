@@ -30,17 +30,12 @@ pub trait Lifecycle {
     ) {
     }
 
-    /// The current default background color (the viewport background), as
-    /// `[r, g, b, a]`. OSC 11 updates it at runtime; the macOS titlebar and
-    /// the surface clear color track it so chrome never disagrees with the
-    /// rendered grid.
+    /// The current default background color (viewport clear) as `[r,g,b,a]`.
     fn default_bg(&self) -> [f32; 4] {
         [0.0, 0.0, 0.0, 1.0]
     }
 
-    /// The current default foreground (text) color, as `[r, g, b, a]`. OSC 10
-    /// updates it at runtime; the split-divider tint derives from it so the
-    /// chrome tracks the theme's ink color.
+    /// The current default foreground (text) color, as `[r, g, b, a]`.
     fn default_fg(&self) -> [f32; 4] {
         [1.0, 1.0, 1.0, 1.0]
     }
