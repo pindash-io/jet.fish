@@ -3,7 +3,8 @@
 
 //! OSC 133 shell-integration marker (`A`/`B`/`C`/`D`).
 
-use compact_str::{CompactString, format_compact};
+use compact_str::CompactString;
+use compact_str::format_compact;
 use smallvec::SmallVec;
 
 use vtty::Event;
@@ -13,7 +14,7 @@ use super::codec::{EncodeSeq, Encoded};
 /// A parsed OSC 133 shell-integration marker: the action byte (`A`/`B`/`C`/`D`)
 /// plus the optional `aid=` prompt id and positional exit code (iTerm2's
 /// `OSC 133;D;<code>` shape).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ShellPrompt {
     /// The action byte (`A`, `B`, `C`, `D`, …).
     pub action: u8,
@@ -27,7 +28,7 @@ pub struct ShellPrompt {
 
 impl EncodeSeq for ShellPrompt {
     fn encode(self) -> Encoded {
-        let mut params = SmallVec::<Vec<u8>, 8>::new();
+        let mut params = SmallVec::new();
         params.push(b"133".to_vec());
         params.push(vec![self.action]);
         if let Some(aid) = &self.aid {

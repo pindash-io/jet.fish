@@ -19,12 +19,13 @@
 pub mod command;
 pub mod notification;
 pub use command::codec::{DecodeSeq, EncodeSeq};
+pub use command::cwd_path;
 pub use command::{
     ColorCommand, Command, Csi, CsiCtx, Dcs, DefaultColor, Esc, Hyperlink,
     Move, Osc, Osc52, OscCommand, Query, Sgr, ShellPrompt, WindowCommand,
-    cwd_path,
 };
-pub use notification::{Notification, parse_osc99, parse_osc777};
+pub use notification::Notification;
+pub use notification::{parse_osc99, parse_osc777};
 
 #[allow(missing_docs)]
 pub mod commands;

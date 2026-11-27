@@ -13,10 +13,9 @@ use jetfish_protocol::Palette;
 
 use crate::commands::Apply;
 
-/// Apply every effect of an SGR sequence to `s`, in sequence order. The hot
-/// single-attribute case uses [`vtty::single_effect`], the common
-/// attribute+color pair uses [`vtty::two_effects`]; anything larger falls back
-/// to [`vtty::parse_effects`] into a stack `SmallVec`.
+/// Apply every effect of an SGR sequence to `s`, in sequence order. One/two
+/// effects use the hot `single_effect`/`two_effects`; more fall back to
+/// [`vtty::parse_effects`].
 #[inline]
 pub fn for_each_effect<S: Apply + ?Sized>(
     s: &mut S,

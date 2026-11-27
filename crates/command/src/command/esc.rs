@@ -21,7 +21,7 @@ pub struct Esc<'a> {
 
 impl EncodeSeq for Esc<'_> {
     fn encode(self) -> Encoded {
-        let mut intermediates = SmallVec::<u8, 2>::new();
+        let mut intermediates = SmallVec::new();
         intermediates.extend_from_slice_copy(self.ints);
         let mut out = Encoded::new();
         Event::EscDispatch { intermediates, byte: self.byte }
@@ -37,8 +37,8 @@ impl DecodeSeq for Esc<'_> {
 }
 
 impl Esc<'_> {
-    /// Decode an ESC (`ESC x`) sequence into a semantic [`Command`], or `None`
-    /// for unhandled sequences. CellScreen-agnostic — the caller applies the command.
+    /// Decode an ESC (`ESC x`) sequence into a [`Command`], or `None` for
+    /// unhandled sequences.
     #[must_use]
     pub fn parse(ints: &[u8], byte: u8) -> Option<Command> {
         if let Some(&marker) = ints.first() {

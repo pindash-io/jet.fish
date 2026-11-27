@@ -46,10 +46,7 @@ pub struct Csi<'a> {
 }
 
 impl Csi<'_> {
-    /// Build a CSI sequence: `ESC [ <prefix ints> <params> <suffix ints> <final>`.
-    /// Prefix intermediates (`?`, `>`, `=`, `<`) come before the params; suffix
-    /// intermediates (`"`, ` `, `$`, `'`, `!`, `#`) come after. Semicolon-separated
-    /// params (the common case for Command encoding).
+    /// Build a CSI sequence: `ESC [ prefix params suffix final`.
     pub(super) fn build(
         prefix: Option<&[u8]>,
         params: &[i32],
@@ -109,9 +106,8 @@ impl EncodeSeq for Csi<'_> {
 }
 
 impl Csi<'_> {
-    /// Decode a CSI (`ESC [`) sequence into a semantic [`Command`], or `None` for
-    /// unhandled / ignored sequences. CellScreen-agnostic — the caller applies the
-    /// returned command to its own grid.
+    /// Decode a CSI (`ESC [`) sequence into a [`Command`], or `None` for
+    /// unhandled/ignored sequences.
     #[must_use]
     pub fn parse(
         params: &[i32],
@@ -292,13 +288,13 @@ impl Csi<'_> {
                     }
                     // Multi-mode (`?1006;1000h`, htop's ncurses mousemask).
                     codes => {
-                        let modes: Vec<TermFlags> = codes
-                            .iter()
-                            .map(|code| {
-                                TermFlags::from_mode_code(*code, private)
-                            })
-                            .filter(|m| !m.is_empty())
-                            .collect();
+                        let modes = SmallVec::from_iter(
+                            codes.iter().filter_map(|code| {
+                                let m =
+                                    TermFlags::from_mode_code(*code, private);
+                                (!m.is_empty()).then_some(m)
+                            }),
+                        );
                         match modes.len() {
                             0 => return None,
                             1 => Command::SetMode { mode: modes[0], on },

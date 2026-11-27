@@ -8,7 +8,8 @@ use smallvec::SmallVec;
 
 use vtty::Event;
 
-use jetfish_protocol::{Progress, percent_decode};
+use jetfish_protocol::Progress;
+use jetfish_protocol::percent_decode;
 
 pub use jetfish_protocol::cwd_path;
 
@@ -89,9 +90,8 @@ impl DecodeSeq for Osc<'_> {
 }
 
 impl Osc<'_> {
-    /// Decode an OSC (`ESC ]`) sequence into a semantic [`Command`], or `None`
-    /// for unhandled sequences. `osc52` is the clipboard access policy gating
-    /// read/write. CellScreen-agnostic — the caller applies the command.
+    /// Decode an OSC (`ESC ]`) sequence into a [`Command`], or `None` for
+    /// unhandled sequences. `osc52` gates the clipboard read/write.
     #[must_use]
     pub fn parse(params: &[&[u8]], osc52: Osc52) -> Option<Command> {
         let num = |i: usize| {
@@ -119,7 +119,7 @@ impl Osc<'_> {
                 let entries: Vec<(usize, u32)> = (1..params.len() - 1)
                     .step_by(2)
                     .filter_map(|i| {
-                        Some((num(i)?, vtty::parse(params[i + 1])?))
+                        Some((num(i)?, vtty::osc_to_rgba_u32(params[i + 1])?))
                     })
                     .collect();
                 if entries.is_empty() {
@@ -188,7 +188,7 @@ impl Osc<'_> {
                     b"1" => {
                         let percent = params
                             .get(3)
-                            .and_then(|v| std::str::from_utf8(v).ok())
+                            .and_then(|v| CompactString::from_utf8(v).ok())
                             .and_then(|s| s.parse::<u8>().ok())
                             .unwrap_or(0)
                             .min(100);
@@ -217,8 +217,9 @@ impl Osc<'_> {
                     if params.get(1)? == b"?" {
                         Query::DefaultColor(target).into()
                     } else {
-                        let rgb =
-                            params.get(1).and_then(|v| vtty::parse(v))?;
+                        let rgb = params
+                            .get(1)
+                            .and_then(|v| vtty::osc_to_rgba_u32(v))?;
                         ColorCommand::SetDefault { target, rgb }.into()
                     }
                 }
@@ -226,7 +227,9 @@ impl Osc<'_> {
                     ColorCommand::ResetDefault(target).into()
                 }
                 OscColor::SetHighlight(target) => {
-                    let rgb = params.get(1).and_then(|v| vtty::parse(v))?;
+                    let rgb = params
+                        .get(1)
+                        .and_then(|v| vtty::osc_to_rgba_u32(v))?;
                     ColorCommand::SetHighlight { target, rgb }.into()
                 }
                 OscColor::ResetHighlight(target) => {

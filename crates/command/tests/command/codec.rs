@@ -23,7 +23,10 @@ fn roundtrip_commands() {
         Command::SetMode { mode: TermFlags::BRACKETED_PASTE, on: true },
         Command::SetMode { mode: TermFlags::INSERT, on: false },
         Command::SetModes {
-            modes: vec![TermFlags::MOUSE_SGR, TermFlags::MOUSE_NORMAL],
+            modes: SmallVec::from([
+                TermFlags::MOUSE_SGR,
+                TermFlags::MOUSE_NORMAL,
+            ]),
             on: true,
         },
         Command::ScrollUp(3),

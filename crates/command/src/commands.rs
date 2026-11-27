@@ -35,18 +35,16 @@ pub trait Apply {
     /// The OSC 52 clipboard access policy used when decoding `OSC 52`.
     fn osc_policy(&self) -> Osc52;
 
-    /// Direct SGR dispatch for the `CSI … m` hot path. Screens that decode
-    /// SGR in place override this to skip the `Command`/`SmallVec` copy (a
-    /// per-sequence alloc + drop); the default builds the owned [`Sgr`] and
-    /// falls back to [`Apply::apply`].
+    /// Direct SGR dispatch for the `CSI … m` hot path; the default builds
+    /// the owned [`Sgr`]. Screens that decode SGR in place override this to
+    /// skip the `Command`/`SmallVec` copy.
     fn apply_sgr(&mut self, params: &[i32], sep: u16) {
         self.apply(Command::Sgr(Sgr::new(SmallVec::from(params), sep)));
     }
 
-    /// Direct CUP dispatch for the `CSI r ; c H` hot path. `pos` is the
-    /// 0-based `(col, row)`, already normalized (DECOM applied by the
-    /// decoder). Screens override this to skip the `Command::Move`
-    /// round-trip; the default falls back to [`Apply::apply`].
+    /// Direct CUP dispatch for the `CSI r ; c H` hot path; `pos` is the
+    /// 0-based `(col, row)`, DECOM already applied. The default falls back
+    /// to [`Apply::apply`].
     fn move_to(&mut self, pos: CursorPos) {
         self.apply(Command::Move(Move::To(pos)));
     }
@@ -116,8 +114,8 @@ pub trait Apply {
     }
 }
 
-// The `Perform` shims funnel into these one-liners so the parse → apply tail
-// lives in exactly one place; screens still own their flush and
+// The `Perform` shims funnel into these one-liners so the parse → apply
+// path lives in exactly one place; screens still own their flush and
 // pre-processing (CSI DEC aliases, alt-screen modes, DCS image payloads).
 
 /// A buffer of [`Command`]s plus the decode context (`CsiCtx` / `Osc52`)

@@ -3,7 +3,8 @@
 
 //! Shared terminal-query reply byte strings and formatters.
 
-use compact_str::{CompactString, format_compact};
+use compact_str::CompactString;
+use compact_str::format_compact;
 use glam::USizeVec2;
 
 use vtty::{ColorId, CursorStyle, SgrFlags, TermFlags, UnderlineStyle};
@@ -160,8 +161,7 @@ pub const fn decrqm_status(mode: TermFlags, set: bool) -> u8 {
     if set { 1 } else { 2 }
 }
 
-/// DECRQSS `m` reply: the active SGR as a canonical sequence. Shared by both
-/// screens — only the style projection differs.
+/// DECRQSS `m` reply: the active SGR as a canonical sequence.
 ///
 /// The underline style is emitted FIRST (no `0;` reset prefix) so nvim's
 /// undercurl probe — it sets `4:3`, queries DECRQSS, and prefix-matches the
@@ -218,7 +218,7 @@ fn push_sgr_color(
         return;
     }
     if let Some(rgb) = palette.get(id.0 as usize).copied() {
-        let [r, g, b] = vtty::u32_to_rgb(rgb);
+        let [r, g, b] = vtty::u32_to_array(rgb);
         let _ = write!(s, ";{base}8;2;{r};{g};{b}");
     }
 }
@@ -303,9 +303,8 @@ pub fn decrcra_reply_for(
     decrcra_reply(id, checksum)
 }
 
-/// Format an XTGETTCAP reply for a queried capability (the shared terminfo
-/// table; multi-cap `Tc;RGB;setrgbf;setrgbb` supported). `finish()` already
-/// yields a [`CompactString`], so return it directly — no `String` round-trip.
+/// Format an XTGETTCAP reply for a queried capability (shared terminfo table;
+/// multi-cap `Tc;RGB;setrgbf;setrgbb` supported).
 #[must_use]
 #[inline]
 pub fn termcap_reply(cap: &[u8], cols: usize, rows: usize) -> CompactString {
@@ -314,5 +313,6 @@ pub fn termcap_reply(cap: &[u8], cols: usize, rows: usize) -> CompactString {
         cols.max(1),
         rows.max(1),
         TERMINAL_NAME.as_bytes(),
+        std::env::consts::OS.as_bytes(),
     )
 }

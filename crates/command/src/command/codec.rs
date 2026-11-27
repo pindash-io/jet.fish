@@ -6,9 +6,9 @@
 //! - [`DecodeSeq`] parses a raw dispatch back
 //! They are inverses for textual commands.
 
-use compact_str::{CompactString, format_compact};
 use smallvec::SmallVec;
 
+use vtty::rgb_spec;
 use vtty::{Charset, Event, SgrFlags, TermFlags};
 use vtty::{format_osc_color_reply, format_osc_palette_reply};
 
@@ -84,11 +84,9 @@ impl EncodeSeq for Command {
                     if private.is_some_and(|prev| prev != p) {
                         // Mixed ANSI/private params — fall back to one
                         // sequence per mode.
-                        let mut out = Encoded::new();
-                        for &m in &modes {
-                            out.extend(encode_mode(m, on));
-                        }
-                        return out;
+                        return Encoded::from_iter(
+                            modes.iter().flat_map(|m| encode_mode(*m, on)),
+                        );
                     }
                     private = Some(p);
                     codes.push(code);
@@ -97,10 +95,10 @@ impl EncodeSeq for Command {
                 Csi::build(prefix, &codes, None, if on { b'h' } else { b'l' })
             }
             Self::SaveModes(codes) => {
-                Csi::build(Some(b"?"), codes.as_slice(), None, b's')
+                Csi::build(Some(b"?"), &codes, None, b's')
             }
             Self::RestoreModes(codes) => {
-                Csi::build(Some(b"?"), codes.as_slice(), None, b'u')
+                Csi::build(Some(b"?"), &codes, None, b'u')
             }
             Self::ScrollUp(n) => Csi::build(None, &[n as i32], None, b'S'),
             Self::ScrollDown(n) => Csi::build(None, &[n as i32], None, b'T'),
@@ -451,12 +449,6 @@ impl EncodeSeq for WindowCommand {
             Self::PopTitle => Csi::build(None, &[23], None, b't'),
         }
     }
-}
-
-/// Format a packed 0xRRGGBBAA as the xterm `rgb:RRRR/GGGG/BBBB` spec.
-fn rgb_spec(rgb: u32) -> CompactString {
-    let [r, g, b] = vtty::u32_to_rgb(rgb);
-    format_compact!("rgb:{r:02x}{r:02x}/{g:02x}{g:02x}/{b:02x}{b:02x}")
 }
 
 /// Encode a [`TermFlags`] mode set/reset as one `CSI … h/l` sequence per flag.

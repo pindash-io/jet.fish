@@ -7,6 +7,7 @@
 //! [`Query`], [`ColorCommand`]).
 
 use compact_str::CompactString;
+use smallvec::SmallVec;
 
 use vtty::{Charset, SgrFlags, TermFlags};
 
@@ -27,16 +28,16 @@ mod shell_prompt;
 
 pub use csi::{Csi, CsiCtx};
 pub use dcs::Dcs;
+pub use dispatch::{CsiHandler, EscHandler, Handler, OscHandler};
 pub use dispatch::{
-    CsiHandler, EscHandler, Handler, OscHandler, apply_dcs_query,
-    dcs_query_kind, dispatch_csi, dispatch_esc, dispatch_osc,
+    apply_dcs_query, dcs_query_kind, dispatch_csi, dispatch_esc, dispatch_osc,
 };
 pub use esc::Esc;
-pub use kitty_color::{
-    KittyColorKey, KittyColorOp, apply as kitty_color_apply,
-};
+pub use kitty_color::apply as kitty_color_apply;
+pub use kitty_color::{KittyColorKey, KittyColorOp};
 pub use marker::Marker;
-pub use osc::{Osc, Osc52, cwd_path};
+pub use osc::cwd_path;
+pub use osc::{Osc, Osc52};
 pub use sgr::{for_each_effect, resolve_color, resolve_spec};
 pub use shell_prompt::ShellPrompt;
 
@@ -73,7 +74,7 @@ pub enum Command {
     /// `?1006;1000h` SGR + button tracking). Each mode applies independently.
     SetModes {
         /// The modes to set/reset, one per CSI parameter.
-        modes: Vec<TermFlags>,
+        modes: SmallVec<TermFlags, 4>,
         /// `true` = set (SM), `false` = reset (RM).
         on: bool,
     },

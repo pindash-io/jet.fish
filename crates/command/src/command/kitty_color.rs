@@ -5,10 +5,12 @@
 //! (`foreground`, `background`, `cursor`, `selection_*`, or an ANSI index).
 
 use bases::Base64;
-use compact_str::{CompactString, format_compact};
+use compact_str::CompactString;
+use compact_str::format_compact;
 use smallvec::SmallVec;
 
 use vtty::ColorId;
+use vtty::rgb_spec;
 
 use jetfish_protocol::{Defaults, Highlight, Palette};
 
@@ -89,7 +91,7 @@ impl ReplyEntry {
                 out.push_str(&key_wire(key));
                 out.push('=');
                 if let Some(rgb) = rgb {
-                    out.push_str(&rgb_wire(rgb));
+                    out.push_str(&rgb_spec(rgb));
                 }
             }
             Self::Unknown(name) => {
@@ -104,14 +106,8 @@ impl ReplyEntry {
 fn key_wire(key: KittyColorKey) -> CompactString {
     match key {
         KittyColorKey::Palette(index) => format_compact!("{index}"),
-        key => CompactString::from(key.name()),
+        key => key.name().into(),
     }
-}
-
-/// The `rgb:rrrr/gggg/bbbb` wire form of a color.
-fn rgb_wire(rgb: u32) -> CompactString {
-    let [r, g, b] = vtty::u32_to_rgb(rgb);
-    format_compact!("rgb:{r:02x}{r:02x}/{g:02x}{g:02x}/{b:02x}{b:02x}")
 }
 
 /// Decode the `Pk = Pv ; …` payload into ops. Unrecognized keys become
@@ -126,20 +122,21 @@ pub(crate) fn parse(pairs: &[&[u8]]) -> Option<Vec<KittyColorOp>> {
 /// Decode one `Pk = Pv` pair; `None` skips an invalid color value.
 fn parse_pair(pair: &[u8]) -> Option<KittyColorOp> {
     // Split on the first `=`; a pair without one is a bare key (reset).
-    let (key, value) = match pair.iter().position(|&b| b == b'=') {
-        Some(i) => (&pair[..i], Some(&pair[i + 1..])),
-        None => (pair, None),
-    };
+    let mut iter = pair.splitn(2, |b| matches!(b, b'='));
+    let key = iter.next().unwrap_or(pair);
+    let value = iter.next();
     let Some(key) = key_of(key) else {
         // An unrecognized key: keep it (queries reply `unknown=`).
         return Some(KittyColorOp::Unknown(
-            String::from_utf8_lossy(key).into_owned(),
+            String::from_utf8_lossy(key).into(),
         ));
     };
     Some(match value {
         Some(b"?") => KittyColorOp::Query(key),
         Some(b"") => KittyColorOp::Set { key, rgb: None },
-        Some(v) => KittyColorOp::Set { key, rgb: Some(vtty::parse(v)?) },
+        Some(v) => {
+            KittyColorOp::Set { key, rgb: Some(vtty::osc_to_rgba_u32(v)?) }
+        }
         None => KittyColorOp::Reset(key),
     })
 }
@@ -180,7 +177,6 @@ pub fn apply(
     ops: &[KittyColorOp],
 ) -> Option<CompactString> {
     let mut entries = SmallVec::<ReplyEntry, 2>::new();
-
     for op in ops {
         match op {
             KittyColorOp::Query(key) => {
@@ -234,7 +230,6 @@ pub fn apply(
             },
         }
     }
-
     reply(&entries)
 }
 
@@ -303,7 +298,7 @@ pub(crate) fn encode(ops: &[KittyColorOp]) -> SmallVec<u8, 8> {
                 out.extend_from_slice_copy(key_wire(*key).as_bytes());
                 out.push(b'=');
                 if let Some(rgb) = rgb {
-                    out.extend_from_slice_copy(rgb_wire(*rgb).as_bytes());
+                    out.extend_from_slice_copy(rgb_spec(*rgb).as_bytes());
                 }
             }
             KittyColorOp::Reset(key) => {

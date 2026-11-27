@@ -3,8 +3,7 @@
 
 //! The ESC charset-designation marker (`( ) * +`).
 
-/// The ESC charset-designation marker (ECMA-35 §8.3.8 DESIGNATE): `(` G0,
-/// `)` G1, `*` G2, `+` G3.
+/// The ESC charset-designation marker (ECMA-35 §8.3.8 DESIGNATE): `(` G0, `)` G1, `*` G2, `+` G3.
 ///
 /// <https://ecma-international.org/wp-content/uploads/ECMA-35_6th_edition_december_1994.pdf>
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
