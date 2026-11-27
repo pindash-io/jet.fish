@@ -1,9 +1,8 @@
 // Copyright © Fangdun Tsai <fundon@pindash.io>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! VT image protocols: kitty graphics (`DCS q` / `APC _G`), DEC Sixel, and
-//! iTerm2 inline images (`OSC 1337;File=…`). Parsing/decoding only — the host
-//! owns rasterization + placement.
+//! VT image protocols: kitty graphics (`DCS q` / `APC _G`), DEC Sixel and iTerm2
+//! inline images. Parsing and decoding only; the host owns rasterization.
 
 #![expect(
     clippy::cast_possible_truncation,
@@ -35,10 +34,7 @@ mod sixel;
 pub const MAX_IMAGE_PAYLOAD: usize = 64 * 1024 * 1024;
 
 /// The aspect-preserving downscale for a `width × height` image to fit
-/// `max_w × max_h`: `(w, h, nw, nh)` where `(w, h)` are the source dims
-/// guarded to `≥ 1` and `(nw, nh)` are the scaled dims. `None` when the
-/// source already fits. Shared by the `image`-crate and the `simple`
-/// box-filter resize paths.
+/// `max_w × max_h`: `(w, h, nw, nh)`. `None` when the source already fits.
 #[must_use]
 pub(crate) fn scale_fit(
     width: u32,

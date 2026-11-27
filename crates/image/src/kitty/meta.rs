@@ -8,8 +8,8 @@ use glam::UVec2;
 
 use super::decode::{decode_kitty_file, decode_kitty_rgba};
 
-/// A parsed kitty graphics control header (`DCS q` / `APC _G`) — the
-/// `key=value` pairs before the `;` that separates the payload.
+/// A parsed kitty graphics control header (`DCS q` / `APC _G`): the `key=value`
+/// pairs before the `;` that separates the payload.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KittyMeta {
     /// Image id (`i=`).
@@ -18,11 +18,11 @@ pub struct KittyMeta {
     pub action: char,
     /// Pixel size (`s=`/`v=`).
     pub size: UVec2,
-    /// Cell size (`c=`/`r=`) — the cell-dimension form of `s=`/`v=`.
+    /// Cell size (`c=`/`r=`): the cell-dimension form of `s=`/`v=`.
     pub cell_size: UVec2,
-    /// Source-rect origin (`x=`/`y=`) — crop the image before display.
+    /// Source-rect origin (`x=`/`y=`): crop the image before display.
     pub src: UVec2,
-    /// Source-rect size (`w=`/`h=`) — 0 means the full image.
+    /// Source-rect size (`w=`/`h=`): 0 means the full image.
     pub src_size: UVec2,
     /// Pixel format (`f=`): 24 = RGB, 32 = RGBA, 100 = PNG.
     pub format: u8,
@@ -35,17 +35,17 @@ pub struct KittyMeta {
     /// previous chunk's base64 instead of decoded as a complete image.
     pub more: bool,
     /// Quiet flag (`q=`): 1 suppresses OK responses, 2 suppresses all
-    /// responses. It does NOT gate display (that is the `t` vs `T` action).
+    /// responses. It does not gate display (that is the `t` vs `T` action).
     pub quiet: u8,
-    /// Placement id (`p=`) — uniquely identifies a placement for
-    /// acknowledgements and move/replace.
+    /// Placement id (`p=`), unique per placement for acknowledgements and
+    /// move/replace.
     pub placement_id: u32,
     /// Cursor movement policy (`C=`): `false` (`C=1`) = leave the cursor;
     /// `true` (default `C=0`) = move right `c` / down `r-1` after placement.
     pub cursor_move: bool,
     /// Pixel offset within the starting cell (`X=`/`Y=`, uppercase).
     pub cell_offset: UVec2,
-    /// z-index (`z=`) — negative draws the image under the text.
+    /// z-index (`z=`): negative draws the image under the text.
     pub z_index: i32,
     /// Delete specifier (`d=`) for `a=d`: `a`/`A` = all visible, `i`/`I` =
     /// the image id.
@@ -79,9 +79,8 @@ impl KittyMeta {
         }
     }
 
-    /// Decode this header's payload depending on the transmission medium:
-    /// `d` = direct base64 (with optional `o=z` zlib), `f`/`t` = a
-    /// base64-encoded file path.
+    /// Decode the payload by transmission medium: `d` = direct base64 (with
+    /// optional `o=z` zlib), `f`/`t` = a base64-encoded file path.
     pub fn decode(&self, base64: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
         match self.medium {
             'd' => decode_kitty_rgba(
@@ -148,13 +147,12 @@ pub fn parse_kitty_meta(payload: &[u8]) -> Option<(KittyMeta, &[u8])> {
             b"i" => img.id = parse_num(v).unwrap_or_default(),
             b"s" => img.size.x = parse_num(v).unwrap_or_default(),
             b"v" => img.size.y = parse_num(v).unwrap_or_default(),
-            // `c`/`r` are the cell-dimension form of `s`/`v` (pixels).
-            // jcode and other clients send cells instead of pixels, so
-            // both must parse or the size stays 0 for those clients.
+            // `c`/`r` are the cell form of `s`/`v` (pixels); clients such as jcode send
+            // cells, so both must parse or their size stays 0.
             b"c" => img.cell_size.x = parse_num(v).unwrap_or_default(),
             b"r" => img.cell_size.y = parse_num(v).unwrap_or_default(),
-            // Source rect (which part of the image to display) — used
-            // when the image is cropped to fit the space below the cursor.
+            // Source rect (which part of the image to display), used when the image
+            // is cropped to fit the space below the cursor.
             b"x" => img.src.x = parse_num(v).unwrap_or_default(),
             b"y" => img.src.y = parse_num(v).unwrap_or_default(),
             b"w" => img.src_size.x = parse_num(v).unwrap_or_default(),
@@ -170,7 +168,7 @@ pub fn parse_kitty_meta(payload: &[u8]) -> Option<(KittyMeta, &[u8])> {
             // Quiet/placement (`q=`): 1 = suppress OK responses,
             // 2 = suppress all responses. Display is gated by `t` vs `T`.
             b"q" => img.quiet = parse_num(v).unwrap_or(img.quiet),
-            // Placement id (`p=`) — for acknowledgements and move/replace.
+            // Placement id (`p=`): for acknowledgements and move/replace.
             b"p" => {
                 img.placement_id = parse_num(v).unwrap_or(img.placement_id);
             }
@@ -185,7 +183,7 @@ pub fn parse_kitty_meta(payload: &[u8]) -> Option<(KittyMeta, &[u8])> {
             b"Y" => {
                 img.cell_offset.y = parse_num(v).unwrap_or(img.cell_offset.y);
             }
-            // z-index (`z=`) — negative draws under the text.
+            // z-index (`z=`): negative draws under the text.
             b"z" => img.z_index = parse_num(v).unwrap_or(img.z_index),
             // Delete specifier (`d=`) for `a=d`.
             b"d" => img.delete_spec = first_char(v).unwrap_or(img.delete_spec),

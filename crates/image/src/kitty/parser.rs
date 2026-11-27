@@ -11,15 +11,16 @@ use glam::{USizeVec2, UVec2};
 use hashbrown::HashMap;
 
 use super::decode::crop_rgba;
-use super::meta::{KittyMeta, parse_kitty_meta};
+use super::meta::KittyMeta;
+use super::meta::parse_kitty_meta;
 use crate::MAX_IMAGE_PAYLOAD;
 use crate::parser::{
     Image, ImageCtx, ImageKind, ImageParser, ParseOutcome, ParsedImage,
     VirtualPlacement,
 };
 
-/// Kitty graphics (`DCS q` legacy / `APC _G` modern) — owns the stored-image
-/// map and the `m=` chunk-reassembly buffer.
+/// Kitty graphics (`DCS q` legacy / `APC _G` modern): owns the stored-image map
+/// and the `m=` chunk-reassembly buffer.
 #[derive(Default)]
 pub struct KittyParser {
     images: HashMap<u32, (KittyMeta, Vec<u8>)>,
@@ -33,11 +34,8 @@ pub struct KittyParser {
 }
 
 impl KittyParser {
-    /// Insert into the upload cache (the still-base64 payload), evicting the
-    /// oldest entries (FIFO) once the total stored bytes exceed
-    /// `MAX_IMAGE_PAYLOAD × 4`. Decode is deferred to the `p`/`P`/`materialize`
-    /// placement so a transmit-then-never-place stream never pays the base64
-    /// + image decode (the `kitty` corpus).
+    /// Insert into the upload cache (still base64), evicting FIFO past
+    /// `MAX_IMAGE_PAYLOAD × 4`; decode waits for placement.
     fn cache_insert(&mut self, meta: KittyMeta, base64: Vec<u8>) {
         let id = meta.id;
         let size = base64.len();
@@ -129,9 +127,8 @@ impl KittyParser {
                     && matches!(meta.format, 24 | 32 | 100);
                 self.ack_handled(&meta, ok)
             }
-            // Delete (`a=d`). kitty distinguishes lowercase (delete the
-            // placements only, keep the upload cache) from uppercase (also
-            // free the image data).
+            // Delete (`a=d`): lowercase removes placements only, uppercase also frees
+            // the image data.
             'd' => {
                 let free_images = meta.delete_spec.is_ascii_uppercase();
                 let (clear_all, delete_id, delete_image_id) =
@@ -295,10 +292,8 @@ impl ImageParser for KittyParser {
             return ParseOutcome::Skip;
         };
         if meta.more {
-            // `m=1`: append this chunk's base64; the start chunk's header is
-            // authoritative. Cap the accumulated buffer so a stream of chunks
-            // can't grow it without bound (each DCS payload is capped, but the
-            // reassembly buffer spans payloads).
+            // `m=1`: append the chunk's base64; the start chunk's header is
+            // authoritative, and the buffer is capped across payloads.
             match &mut self.pending {
                 Some((_, base64))
                     if base64.len().saturating_add(data.len())
@@ -311,7 +306,7 @@ impl ImageParser for KittyParser {
             }
             return ParseOutcome::Consumed;
         }
-        // `m=0`/absent: final (or only) chunk — reassemble + decode.
+        // `m=0`/absent: the final (or only) chunk, so reassemble and decode.
         let (meta, mut base64) =
             self.pending.take().unwrap_or((meta, Vec::new()));
         base64.extend_from_slice(data);

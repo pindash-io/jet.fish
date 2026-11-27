@@ -5,14 +5,11 @@
 
 use std::sync::Arc;
 
-use fearless_simd::{Level, Simd, dispatch, prelude::*, u32x4};
+use fearless_simd::{Level, Simd};
+use fearless_simd::{dispatch, prelude::*, u32x4};
 
-/// Box-filter downscale of RGBA pixels to fit within `max_w × max_h`,
-/// preserving aspect ratio. Alpha is averaged in premultiplied space so
-/// transparent pixels don't smear their color into opaque neighbours.
-///
-/// Returns `None` when the source already fits (no resize needed); otherwise
-/// the scaled pixels and their new dimensions.
+/// Box-filter downscale of RGBA pixels to fit `max_w × max_h`, preserving
+/// aspect; alpha averages premultiplied. `None` when it already fits.
 #[must_use]
 pub fn scale_down_rgba(
     pixels: &[u8],
@@ -29,9 +26,7 @@ pub fn scale_down_rgba(
 }
 
 /// One box-summed output pixel: average the premultiplied RGBA over the
-/// source box `[sx0..sx1) × [sy0..sy1)`. Four pixels are summed per SIMD
-/// iteration (one packed-RGBA `u32` per lane); the box bounds are arbitrary,
-/// so the head/tail and the lane reduction are scalar.
+/// source box `[sx0..sx1) × [sy0..sy1)` (four pixels per SIMD lane).
 #[inline(always)]
 #[allow(
     clippy::too_many_arguments,

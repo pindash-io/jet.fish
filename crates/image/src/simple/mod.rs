@@ -1,17 +1,16 @@
 // Copyright © Fangdun Tsai <fundon@pindash.io>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! Simple (dependency-light) PNG decode and RGBA resize.
-//!
-//! The hand-rolled `png`-crate decoder with SIMD colour expansion and a
-//! premultiplied box-filter downscale, selected by the `simple` feature.
+//! Dependency-light PNG decode and RGBA resize (`simple` feature): a hand-rolled
+//! `png` decoder with SIMD color expansion and a premultiplied box downscale.
 
 #![allow(
     clippy::chunks_exact_to_as_chunks,
     reason = "chunks_exact + zip pairs two SIMD iterators; as_chunks forces tuple/remainder handling"
 )]
 
-use fearless_simd::{Level, Simd, dispatch, prelude::*, u8x16};
+use fearless_simd::{Level, Simd};
+use fearless_simd::{dispatch, prelude::*, u8x16};
 
 mod resize;
 

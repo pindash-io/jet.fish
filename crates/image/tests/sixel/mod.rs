@@ -24,9 +24,8 @@ fn clamps_oversized_dimensions() {
 
 #[test]
 fn decodes_repeat_and_newline() {
-    // The user-facing smoke command: red + green palette entries, then
-    // `~!60~-!60~-` draws 61 green sixels on the first row and 60 on the
-    // second (the last-selected color is `#1` green).
+    // Red and green palette entries, then `~!60~-!60~-` draws 61 green sixels
+    // on the first row and 60 on the second.
     let img = decode_sixel(b"#0;2;100;0;0#1;2;0;100;0~!60~-!60~-").unwrap();
     assert_eq!((img.width, img.height), (61, 18));
     // Top-left is green; the bottom-right cell (col 60, second row) is
@@ -39,7 +38,7 @@ fn decodes_repeat_and_newline() {
 #[test]
 fn honors_raster_attributes() {
     // `"1;1;4;6` declares a 4×6 image with square (1:1) pixels, larger
-    // than the actual `~` data (one sixel) — the extra columns are black.
+    // than the actual `~` data (one sixel), so the extra columns are black.
     let img = decode_sixel(b"\"1;1;4;6#0;2;100;0;0~").unwrap();
     assert_eq!((img.width, img.height), (4, 6));
     assert_eq!((img.aspect_x, img.aspect_y), (1, 1));
@@ -61,9 +60,8 @@ fn undefined_color_zero_is_transparent() {
 
 #[test]
 fn p2_raster_attrs_skip_the_bounds_scan() {
-    // `"1;1;4;6` gives width=4, height=6 (P2). The payload draws no
-    // pixels, so the P1 bounds scan would return `None` — the P2 path
-    // must not require it.
+    // `"1;1;4;6` gives width=4, height=6 (P2); the payload draws no pixels, so
+    // the P2 path must not require the P1 bounds scan.
     let img = decode_sixel(b"\"1;1;4;6").unwrap();
     assert_eq!((img.width, img.height), (4, 6));
     assert_eq!((img.aspect_x, img.aspect_y), (1, 1));

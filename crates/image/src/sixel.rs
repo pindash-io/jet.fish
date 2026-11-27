@@ -5,7 +5,8 @@
 
 use std::sync::Arc;
 
-use fearless_simd::{Level, Simd, dispatch, prelude::*, u8x16};
+use fearless_simd::{Level, Simd};
+use fearless_simd::{dispatch, prelude::*, u8x16};
 use glam::{USizeVec2, UVec2};
 
 use crate::parser::{
@@ -36,7 +37,7 @@ pub struct SixelImage {
 pub fn decode_sixel(data: &[u8]) -> Option<SixelImage> {
     let mut palette = [[0_u8; 3]; 256];
     let attrs = parse_raster_attrs(data);
-    // P2 mode (raster attrs give BOTH dimensions): the bounds scan is only
+    // P2 mode (raster attrs give both dimensions): the bounds scan is only
     // the P1 fallback, so skip the whole-payload scan when it's unused.
     let (max_col, max_row) =
         if attrs.is_some_and(|(_, _, ph, pv)| ph > 0 && pv > 0) {
@@ -60,11 +61,8 @@ pub fn decode_sixel(data: &[u8]) -> Option<SixelImage> {
     let mut pixels = vec![0_u8; (width * height * 4) as usize];
 
     let mut color = [255_u8; 3]; // default: white
-    // Colour index 0 is the sixel background. When `#0` is never explicitly
-    // defined, drawing with it marks transparent pixels (the terminal's
-    // background shows through), matching yazi's sixel encoder. The
-    // transparent predicate only changes at a `#` colour definition, so cache
-    // it here instead of re-evaluating per sixel char.
+    // An undefined `#0` draws transparent pixels (the terminal background shows
+    // through), as yazi's encoder expects; cache that per `#` run.
     let mut bg_is_color = false;
     let mut transparent = true;
     let mut col = 0_u32;
@@ -81,7 +79,7 @@ pub fn decode_sixel(data: &[u8]) -> Option<SixelImage> {
                 let idx = n.min(255) as usize;
                 i = j;
                 if i < data.len() && data[i] == b';' {
-                    // #n;colorspace;c1;c2;c3 — colorspace 1=HLS, 2=RGB.
+                    // #n;colorspace;c1;c2;c3: colorspace 1=HLS, 2=RGB.
                     let Some((_cs, j)) = parse_semicolon_num(data, i) else {
                         break;
                     };
@@ -219,9 +217,8 @@ fn scan_bounds(data: &[u8]) -> Option<(u32, u32)> {
     Some((max_col, row))
 }
 
-/// Write one sixel (6 vertical pixels) repeated across `n` columns,
-/// clamping to the buffer bounds (the dimension cap can clip oversized
-/// images). Each horizontal row is a contiguous broadcast, SIMD-filled.
+/// Write one sixel (6 vertical pixels) across `n` columns, clamped to the
+/// buffer bounds; each row is a contiguous SIMD broadcast.
 #[inline]
 fn put_sixel_run(
     pixels: &mut [u8],
@@ -334,7 +331,7 @@ fn scale(v: u32) -> u8 {
     if v > 100 { v.min(255) as u8 } else { (v * 255 / 100) as u8 }
 }
 
-/// DEC Sixel (`DCS q`) — stateless: the payload is the full raster.
+/// DEC Sixel (`DCS q`): stateless, the payload is the full raster.
 #[derive(Default)]
 pub struct SixelParser;
 

@@ -6,8 +6,6 @@
 //! ```notrust
 //! ESC ] 1337 ; File=name=…;size=…;width=…;height=…;inline=1 : <base64> BEL/ST
 //! ```
-//!
-//! Parse the `key=value` args and base64-decode the file (usually PNG).
 
 use std::sync::Arc;
 
@@ -29,9 +27,8 @@ pub struct Iterm2Image {
     /// Whether to preserve the aspect ratio (`preserveAspectRatio=1`, the
     /// default). `preserveAspectRatio=0` stretches.
     pub preserve_aspect_ratio: bool,
-    /// `WezTerm` extension: `doNotMoveCursor=1` leaves the cursor in place
-    /// (used by TUIs drawing on the bottom row); otherwise the cursor moves
-    /// to the right of the image (iTerm2 default).
+    /// `WezTerm` extension: `doNotMoveCursor=1` leaves the cursor in place (TUIs
+    /// on the bottom row); otherwise it moves right of the image.
     pub do_not_move_cursor: bool,
     /// Decoded file bytes (base64 → PNG/raw).
     pub bytes: Vec<u8>,
@@ -60,10 +57,8 @@ pub fn parse_iterm2(params: &[&[u8]]) -> Option<Iterm2Image> {
 
     let body = &params[1..];
 
-    // The no-inline shape (name/size only) drops the image: skip the full
-    // key-value parse when no `inline=` key is present (the common OSC 1337
-    // probe shape). The `File=` prefix appears on the first body param; the
-    // full parse below still decides the value (`1` vs `0`).
+    // Skip the key-value parse when no `inline=` key is present: the probe
+    // shape (name/size only) carries no image.
     if !body
         .iter()
         .any(|p| p.strip_prefix(b"File=").unwrap_or(p).starts_with(b"inline="))
@@ -149,9 +144,8 @@ fn parse_resize(value: &[u8]) -> Option<Resize> {
     Some(resize)
 }
 
-/// Decode an iTerm2 inline image payload to `(width, height, RGBA8)` using
-/// the configured backend (`simple` = PNG, otherwise the `image` crate's
-/// enabled format features).
+/// Decode an iTerm2 inline image payload to `(width, height, RGBA8)` with the
+/// configured backend: `simple` = PNG, else the `image` crate's features.
 #[must_use]
 pub(crate) fn decode_iterm2(bytes: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
     crate::decode_image(bytes)

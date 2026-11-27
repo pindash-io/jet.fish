@@ -1,9 +1,8 @@
 // Copyright © Fangdun Tsai <fundon@pindash.io>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! Pluggable DCS/APC image-protocol parsers (Sixel, kitty, custom). Each
-//! payload is offered to each parser in order; the first recognizer wins.
-//! Concrete parsers live in [`crate::sixel`] / [`crate::kitty`].
+//! Pluggable DCS/APC image-protocol parsers (Sixel, kitty, custom), offered in
+//! order with the first recognizer winning. See [`crate::sixel`], [`crate::kitty`].
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -23,8 +22,8 @@ pub(crate) fn next_version() -> u64 {
 
 /// A DCS/APC image-protocol parser (Sixel, kitty graphics, or custom).
 pub trait ImageParser: 'static {
-    /// Try to decode a buffered payload. `final_byte` is `q` (`DCS q` — Sixel
-    /// or legacy kitty) or `G` (`APC _G` — modern kitty).
+    /// Try to decode a buffered payload. `final_byte` is `q` (`DCS q`: Sixel
+    /// or legacy kitty) or `G` (`APC _G`: modern kitty).
     fn parse(
         &mut self,
         payload: &[u8],
@@ -36,9 +35,7 @@ pub trait ImageParser: 'static {
     fn clear(&mut self) {}
 
     /// Materialize a `U=1` virtual placement for a `U+10EEEE` placeholder
-    /// cell. `image_id`/`placement_id` are decoded from the cell's fg and
-    /// underline colors; `anchor` is the placeholder cell's grid position.
-    /// Returns `None` when the ids are unknown (not this parser).
+    /// cell; the ids are decoded from the cell's fg and underline colors.
     fn materialize_placeholder(
         &mut self,
         _image_id: u32,
@@ -48,10 +45,8 @@ pub trait ImageParser: 'static {
         None
     }
 
-    /// The matching `U=1` virtual placement (geometry only, no pixels), used
-    /// to re-anchor and re-scale an already-placed image in place when a
-    /// resize re-sends `a=p` with a new `c`/`r` box. Returns `None` when the
-    /// ids are unknown.
+    /// The matching `U=1` virtual placement (geometry only), used to
+    /// re-anchor/re-scale a placed image when a resize re-sends `a=p`.
     fn virtual_placement(
         &self,
         _image_id: u32,
@@ -64,27 +59,25 @@ pub trait ImageParser: 'static {
 /// A decoded terminal image (Sixel / kitty / iTerm2).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Image {
-    /// Which protocol produced the image — the host scales Sixel pixels at
+    /// Which protocol produced the image; the host scales Sixel pixels at
     /// 6-per-cell but renders kitty/iTerm2 pixels 1:1 in device pixels.
     pub kind: ImageKind,
     /// Kitty image id (`i=`); Sixel/iTerm2 use 0.
     pub id: u32,
     /// Monotonic version, bumped per decode.
     pub version: u64,
-    /// Anchor position: `.x` = 0-based cell column, `.y` = full-text line
-    /// (0-based). The viewport row is computed at render time
-    /// (`anchor.y - screen_start()`) so the image scrolls with its text line
-    /// and stays put across resizes.
+    /// Anchor position: `.x` = 0-based cell column, `.y` = full-text line;
+    /// the viewport row is `anchor.y - screen_start()` at render time.
     pub anchor: USizeVec2,
-    /// Display size in cells (`c=`/`r=`) — 0 means the pixel size.
+    /// Display size in cells (`c=`/`r=`): 0 means the pixel size.
     pub cell_size: UVec2,
     /// Size in pixels.
     pub size: UVec2,
     /// Pixel offset within the starting cell (`X=`/`Y=`, kitty).
     pub cell_offset: UVec2,
-    /// z-index (`z=`) — negative draws the image under the text.
+    /// z-index (`z=`): negative draws the image under the text.
     pub z_index: i32,
-    /// Pixel aspect ratio (`Pan:Pad`) — Sixel default 2:1, kitty 1:1.
+    /// Pixel aspect ratio (`Pan:Pad`): Sixel default 2:1, kitty 1:1.
     pub aspect: UVec2,
     /// RGBA pixels (`width × height × 4` bytes). Sixel is opaque (α=255);
     /// kitty/iTerm2 carry their source alpha for transparent backgrounds.
@@ -94,9 +87,9 @@ pub struct Image {
 /// The image protocol that produced an [`Image`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ImageKind {
-    /// DEC Sixel — pixels are 6-per-cell vertically, aspect-corrected.
+    /// DEC Sixel: pixels are 6-per-cell vertically, aspect-corrected.
     Sixel,
-    /// Kitty graphics — pixels are 1:1 device pixels.
+    /// Kitty graphics: pixels are 1:1 device pixels.
     Kitty,
 }
 
@@ -106,18 +99,17 @@ pub enum ImageKind {
 pub struct VirtualPlacement {
     /// Kitty image id (`i=`) of the transmitted image to draw.
     pub image_id: u32,
-    /// Display box in cells (`c=`/`r=`) — the image is aspect-fitted into it.
+    /// Display box in cells (`c=`/`r=`): the image is aspect-fitted into it.
     pub cell_size: UVec2,
     /// Pixel offset within the starting cell (`X=`/`Y=`).
     pub cell_offset: UVec2,
-    /// z-index (`z=`) — negative draws under the text.
+    /// z-index (`z=`): negative draws under the text.
     pub z_index: i32,
 }
 
 impl Image {
-    /// The physical-pixel scale per source pixel. Sixel pixels are 1:1
-    /// device pixels, aspect-corrected (`Pan:Pad`, default 2:1); kitty/
-    /// iTerm2 pixels are 1:1 device pixels.
+    /// Physical pixels per source pixel: Sixel is aspect-corrected
+    /// (`Pan:Pad`, default 2:1), kitty and iTerm2 are 1:1.
     #[inline]
     #[must_use]
     pub fn pixel_scale(&self) -> Vec2 {
@@ -129,18 +121,14 @@ impl Image {
         }
     }
 
-    /// The display size in physical pixels, following kitty's `a=p`
-    /// semantics: both `c` and `r` set → the image is scaled to FIT WITHIN
-    /// the `c×r` box, preserving aspect (letterboxed/pillarboxed); only one
-    /// set → that axis is exact and the other follows the source aspect;
-    /// neither set → native pixel size.
+    /// Display size in physical pixels, per kitty `a=p`: fit the `c×r` box when
+    /// both are set, exact when one is, native pixels when neither.
     #[inline]
     #[must_use]
     pub fn display_size(&self, cell: Vec2) -> Vec2 {
         let natural = self.size.as_vec2() * self.pixel_scale();
-        // The per-axis scale to the `c×r` box (guarding the division for a
-        // zero-sized source). An unset axis is unbounded — its ratio is
-        // ignored below.
+        // The per-axis scale to the `c×r` box, guarding the division for a
+        // zero-sized source; an unset axis is unbounded, so its ratio is ignored.
         let ratio =
             self.cell_size.as_vec2() * cell / natural.max(Vec2::splat(1.0));
         let scale = match (self.cell_size.x > 0, self.cell_size.y > 0) {
@@ -152,10 +140,7 @@ impl Image {
         natural * scale
     }
 
-    /// The display size in cells, rounding each axis up to the next whole
-    /// cell. Used for viewport culling. When both `c` and `r` are set the
-    /// image occupies that whole box (the aspect-fit may leave empty margin
-    /// inside it), so the culling box is `c × r` itself.
+    /// The display size in cells, rounded up (viewport culling).
     #[inline]
     #[must_use]
     pub fn cell_extent(&self, cell: Vec2) -> UVec2 {
@@ -166,12 +151,7 @@ impl Image {
         (px / cell.max(Vec2::splat(1.0))).ceil().as_uvec2()
     }
 
-    /// Whether the image's cell extent overlaps the viewport. `full_line` is
-    /// the absolute line (`anchor.y` + scrollback offset); `view_start` is
-    /// the viewport-top line; `rows`/`cols` are the viewport grid; `cell` is
-    /// the physical cell size. A partial overlap still renders — the host
-    /// clips the remainder, keeping the image glued to its anchor while
-    /// scrolling.
+    /// Whether the image's cell extent overlaps the viewport.
     #[inline]
     pub fn intersects_viewport(
         &self,
@@ -222,7 +202,7 @@ pub struct ParsedImage {
 /// What a parser did with a payload.
 #[derive(Debug)]
 pub enum ParseOutcome {
-    /// Not this protocol — try the next parser.
+    /// Not this protocol: try the next parser.
     Skip,
     /// Recognized with no side effects (e.g. a buffered `m=1` chunk).
     Consumed,

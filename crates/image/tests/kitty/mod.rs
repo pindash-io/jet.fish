@@ -6,7 +6,8 @@ use std::io::Write as _;
 use bases::Base64;
 use glam::{USizeVec2, UVec2};
 
-use super::{KittyParser, decode_kitty_rgba, parse_kitty_meta};
+use super::KittyParser;
+use super::{decode_kitty_rgba, parse_kitty_meta};
 use crate::parser::{ImageCtx, ImageParser, ParseOutcome, ParsedImage};
 
 #[test]
@@ -111,7 +112,7 @@ fn parses_cell_dimensions() {
 
 #[test]
 fn decodes_raw_rgba() {
-    // 2×2 RGBA (uncompressed — kitty f=32 stores bytes directly).
+    // 2×2 RGBA, uncompressed (kitty f=32 stores bytes directly).
     let rgba = [
         255_u8, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255,
     ];

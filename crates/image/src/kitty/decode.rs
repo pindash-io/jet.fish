@@ -24,7 +24,7 @@ pub fn decode_kitty_rgba(
     decode_kitty_raw(&decoded, format, width, height)
 }
 
-/// Decode RAW kitty image bytes (base64 already decoded) to RGBA. f=24 is
+/// Decode raw kitty image bytes (base64 already decoded) to RGBA. f=24 is
 /// RGB → RGBA (α=255), f=32 is RGBA, f=100 is PNG.
 #[must_use]
 pub fn decode_kitty_raw(
@@ -39,9 +39,8 @@ pub fn decode_kitty_raw(
             let h = height.max(1);
             let px = (w as usize).checked_mul(h as usize)?;
             let want_rgb = px.checked_mul(3)?;
-            // Reject absurdly large declared dimensions so a hostile `s=`/`v=`
-            // header can't drive a huge allocation (the payload is capped,
-            // but the declared size is not).
+            // Reject absurd declared dimensions: the payload is capped, but a hostile
+            // `s=`/`v=` header could still drive a huge allocation.
             if want_rgb > MAX_IMAGE_PAYLOAD {
                 return None;
             }

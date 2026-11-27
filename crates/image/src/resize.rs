@@ -7,11 +7,8 @@ use std::sync::Arc;
 
 use image::imageops::FilterType;
 
-/// Downscale RGBA pixels to fit within `max_w × max_h`, preserving aspect
-/// ratio.
-///
-/// Returns `None` when the source already fits (no resize needed); otherwise
-/// the scaled pixels and their new dimensions.
+/// Downscale RGBA pixels to fit `max_w × max_h`, preserving aspect; `None`
+/// when already fitting.
 #[must_use]
 pub fn scale_down_rgba(
     pixels: &[u8],

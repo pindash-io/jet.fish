@@ -8,7 +8,8 @@ mod meta;
 mod parser;
 
 pub use decode::{decode_kitty_file, decode_kitty_raw, decode_kitty_rgba};
-pub use meta::{KittyImage, KittyMeta, parse_kitty_meta};
+pub use meta::parse_kitty_meta;
+pub use meta::{KittyImage, KittyMeta};
 pub use parser::KittyParser;
 
 #[cfg(test)]
