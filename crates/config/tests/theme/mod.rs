@@ -1,7 +1,7 @@
 // Copyright © Fangdun Tsai <fundon@pindash.io>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use super::*;
+use vtty::hex_to_rgba_u32 as parse_hex;
 
 #[test]
 fn parse_hex_handles_hash_and_bare() {
@@ -20,12 +20,22 @@ fn user_theme_dir_overrides_bundled() {
     let custom = dir.join("My-Theme.toml");
     std::fs::write(
         &custom,
-        "name = \"My Theme\"\npalette = [\"#111111\", \"#222222\", \"#333333\", \"#444444\", \"#555555\", \"#666666\", \"#777777\", \"#888888\", \"#999999\", \"#aaaaaa\", \"#bbbbbb\", \"#cccccc\", \"#dddddd\", \"#eeeeee\", \"#ffffff\", \"#000000\"]\n",
+        r##"name = "My Theme"
+palette = [
+    "#111111", "#222222", "#333333", "#444444",
+    "#555555", "#666666", "#777777", "#888888",
+    "#999999", "#aaaaaa", "#bbbbbb", "#cccccc",
+    "#dddddd", "#eeeeee", "#ffffff", "#000000",
+]
+"##,
     )
     .unwrap();
 
     let cfg: crate::Config = toml_edit::de::from_str(
-        "[theme]\nname = \"My-Theme\"\nforeground = \"#abcdef\"\n",
+        r##"[theme]
+name = "My-Theme"
+foreground = "#abcdef"
+"##,
     )
     .unwrap();
     let resolved = cfg.theme.resolve(std::slice::from_ref(&dir));

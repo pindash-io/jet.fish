@@ -4,7 +4,7 @@
 
 App configuration: compiled constants + the `~/.config/jetfish/config.toml`
 file format and loading. Every config key is optional; absent keys keep
-the compiled default.
+the compiled default (or the `JETFISH_*` env override).
 
 <!-- cargo-rdme end -->
 

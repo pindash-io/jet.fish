@@ -8,6 +8,8 @@ use std::path::PathBuf;
 use compact_str::CompactString;
 use serde::Deserialize;
 
+use vtty::hex_to_rgba_u32 as parse_hex;
+
 /// A color theme: a named theme file and/or inline colors.
 #[derive(Deserialize, Default, Debug, Clone)]
 #[serde(default)]
@@ -85,10 +87,15 @@ impl Theme {
 
 /// Overlay `t`'s set keys over `resolved`.
 fn merge_theme(t: &Theme, resolved: &mut ResolvedTheme) {
-    for (i, hex) in t.palette.iter().take(16).enumerate() {
-        if let Some(rgb) = parse_hex(hex) {
-            resolved.ansi[i] = rgb;
-        }
+    for (i, v) in t
+        .palette
+        .iter()
+        .take(16)
+        .map(CompactString::as_str)
+        .flat_map(parse_hex)
+        .enumerate()
+    {
+        resolved.ansi[i] = v;
     }
     if let Some(v) = t.foreground.as_deref().and_then(parse_hex) {
         resolved.foreground = Some(v);
@@ -105,19 +112,6 @@ fn merge_theme(t: &Theme, resolved: &mut ResolvedTheme) {
     if let Some(v) = t.selection_text.as_deref().and_then(parse_hex) {
         resolved.selection_text = Some(v);
     }
-}
-
-/// Parse a `#RRGGBB` / `RRGGBB` hex string (or the 3-digit `#RGB` shorthand,
-/// expanded to `#RRGGBB`) into packed `0xRRGGBBAA` (opaque).
-pub(crate) fn parse_hex(s: &str) -> Option<u32> {
-    let s = s.trim().trim_start_matches('#');
-    let expanded: String = match s.len() {
-        6 => s.to_owned(),
-        3 => s.chars().flat_map(|c| [c, c]).collect(),
-        _ => return None,
-    };
-    let v = u32::from_str_radix(&expanded, 16).ok()?;
-    Some((v << 8) | 0xFF)
 }
 
 #[cfg(test)]

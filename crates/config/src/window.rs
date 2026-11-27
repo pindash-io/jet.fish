@@ -5,6 +5,8 @@
 
 use serde::Deserialize;
 
+use jetfish_protocol::Padding;
+
 /// Window settings.
 #[derive(Deserialize, Debug)]
 #[serde(default)]
@@ -13,12 +15,12 @@ pub struct Window {
     #[serde(default = "default_opacity")]
     pub opacity: f32,
     /// The gap between the window edge and the text grid (logical px).
-    pub padding: jetfish_protocol::Padding,
+    pub padding: Padding,
 }
 
 impl Default for Window {
     fn default() -> Self {
-        Self { opacity: 1.0, padding: jetfish_protocol::Padding::default() }
+        Self { opacity: 1.0, padding: Padding::default() }
     }
 }
 

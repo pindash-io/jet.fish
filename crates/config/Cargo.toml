@@ -9,6 +9,8 @@ license.workspace = true
 [dependencies]
 jetfish_protocol.workspace = true
 
+vtty.workspace = true
+
 compact_str = { workspace = true, features = ["serde"] }
 serde = { workspace = true, features = ["derive"] }
 toml_edit = { workspace = true, features = ["serde"] }
