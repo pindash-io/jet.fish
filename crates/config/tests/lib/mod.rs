@@ -13,15 +13,15 @@ fn inline_theme_resolves() {
     "##)
         .unwrap();
     let resolved = cfg.theme.resolve(&[]);
-    assert_eq!(resolved.foreground, Some(0xffffffff));
-    assert_eq!(resolved.background, Some(0x000000ff));
-    assert_eq!(resolved.ansi[1], 0xff0000ff);
+    assert_eq!(resolved.defaults.fg, 0xffffffff);
+    assert_eq!(resolved.defaults.bg, 0x000000ff);
+    assert_eq!(resolved.palette.entries()[1], 0xff0000ff);
 }
 
 #[test]
 fn config_unknown_keys_are_ignored() {
     let cfg: Config = toml_edit::de::from_str("bogus = 1").unwrap();
-    assert_eq!(cfg.font.size, jetfish_protocol::Font::DEFAULT.size);
+    assert_eq!(cfg.font.size, Font::DEFAULT.size);
 }
 
 #[test]
@@ -52,7 +52,7 @@ fn from_toml_tolerates_invalid_keys_and_applies_valid_ones() {
     assert_eq!(cfg.font.size, 18.0);
     assert_eq!(cfg.window.opacity, 1.0, "invalid window section falls back");
     assert_eq!(cfg.debounce.interactive_gap_ms, 99);
-    assert_eq!(cfg.resolve_theme().foreground, Some(0xabcdefff));
+    assert_eq!(cfg.resolve_theme().defaults.fg, 0xabcdefff);
 }
 
 #[test]
@@ -67,11 +67,10 @@ fn negative_padding_is_clamped_to_zero() {
 
 #[test]
 fn missing_sections_resolve_to_compiled_defaults() {
-    // An empty config (and `Config::default()`) must NOT fall back to
-    // f32/bool zero values: the layout depends on the real compiled
-    // defaults (font size, opacity, ligatures).
+    // Empty config must not fall back to zero values: the layout needs the
+    // compiled defaults (font size, opacity, ligatures).
     let cfg: Config = toml_edit::de::from_str("").unwrap();
-    assert_eq!(cfg.font.size, jetfish_protocol::Font::DEFAULT.size);
+    assert_eq!(cfg.font.size, Font::DEFAULT.size);
     assert!(cfg.font.ligatures, "ligatures default ON");
     assert_eq!(cfg.window.opacity, 1.0);
     assert_eq!(

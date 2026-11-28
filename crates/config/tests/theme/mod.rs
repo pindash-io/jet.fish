@@ -39,10 +39,10 @@ foreground = "#abcdef"
     )
     .unwrap();
     let resolved = cfg.theme.resolve(std::slice::from_ref(&dir));
-    assert_eq!(resolved.ansi[0], 0x111111ff);
-    assert_eq!(resolved.ansi[1], 0x222222ff);
+    assert_eq!(resolved.palette.entries()[0], 0x111111ff);
+    assert_eq!(resolved.palette.entries()[1], 0x222222ff);
     // inline foreground wins over the named theme
-    assert_eq!(resolved.foreground, Some(0xabcdefff));
+    assert_eq!(resolved.defaults.fg, 0xabcdefff);
 
     std::fs::remove_dir_all(&dir).unwrap();
 }
