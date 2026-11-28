@@ -7,9 +7,9 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
-fearless_simd.workspace = true
+fearless_simd = { workspace = true, optional = true }
 glam.workspace = true
-hashbrown.workspace = true
+hashbrown = { workspace = true, optional = true }
 
 bases = { workspace = true, optional = true }
 compact_str = { workspace = true, optional = true }
@@ -19,10 +19,10 @@ png = { workspace = true, optional = true }
 
 [features]
 default = ["kitty", "iterm2", "sixel", "simple"]
-kitty = ["dep:bases", "dep:flate2"]
+kitty = ["dep:bases", "dep:flate2", "dep:hashbrown"]
 iterm2 = ["dep:bases", "dep:compact_str"]
-sixel = []
-simple = ["dep:png"]
+sixel = ["dep:fearless_simd"]
+simple = ["dep:png", "dep:fearless_simd"]
 png = ["dep:image", "image/png"]
 jpeg = ["dep:image", "image/jpeg"]
 gif = ["dep:image", "image/gif"]

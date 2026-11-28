@@ -11,8 +11,8 @@ use glam::{USizeVec2, UVec2};
 use hashbrown::HashMap;
 
 use super::decode::crop_rgba;
-use super::meta::KittyMeta;
 use super::meta::parse_kitty_meta;
+use super::meta::{KittyImage, KittyMeta};
 use crate::MAX_IMAGE_PAYLOAD;
 use crate::parser::{
     Image, ImageCtx, ImageKind, ImageParser, ParseOutcome, ParsedImage,
@@ -101,7 +101,7 @@ impl KittyParser {
                     self.store_virtual(&meta);
                     return self.ack_handled(&meta, true);
                 }
-                let image = self.display(&meta, w, h, &rgba, ctx);
+                let image = display(&meta, w, h, &rgba, ctx);
                 self.image_handled(&meta, image)
             }
             // Place a previously transmitted image at the cursor.
@@ -115,7 +115,7 @@ impl KittyParser {
                         let Some((w, h, rgba)) = stored.decode(&base64) else {
                             return self.ack_handled(&meta, false);
                         };
-                        let image = self.display(&meta, w, h, &rgba, ctx);
+                        let image = display(&meta, w, h, &rgba, ctx);
                         self.image_handled(&meta, image)
                     }
                     None => self.ack_handled(&meta, false),
@@ -216,45 +216,6 @@ impl KittyParser {
         })
     }
 
-    /// Crop a transmitted image to its source rect and position it at the
-    /// cursor (full-text line = viewport top + cursor row).
-    fn display(
-        &self,
-        meta: &KittyMeta,
-        w: u32,
-        h: u32,
-        rgba: &[u8],
-        ctx: ImageCtx,
-    ) -> Image {
-        let (cw, ch, cropped) = crop_rgba(
-            rgba,
-            w,
-            h,
-            meta.src.x,
-            meta.src.y,
-            meta.src_size.x,
-            meta.src_size.y,
-        );
-        let col = ctx.cursor_col.saturating_sub(1);
-        let viewport_row = ctx.cursor_row.saturating_sub(1);
-        Image {
-            kind: ImageKind::Kitty,
-            id: if meta.placement_id != 0 {
-                meta.placement_id
-            } else {
-                meta.id
-            },
-            version: crate::parser::next_version(),
-            anchor: USizeVec2::new(col, ctx.screen_start + viewport_row),
-            cell_size: meta.cell_size,
-            size: UVec2::new(cw, ch),
-            cell_offset: meta.cell_offset,
-            z_index: meta.z_index,
-            aspect: UVec2::ONE,
-            pixels: Arc::from(cropped),
-        }
-    }
-
     /// Build the kitty acknowledgement (`Gi=<id>[,p=<pid>];OK|ENOENT`).
     /// `q` gates it: 0 = noisy, 1 = errors only, 2 = silent; id 0 never acks.
     fn ack(&self, meta: &KittyMeta, ok: bool) -> Vec<u8> {
@@ -346,5 +307,45 @@ impl ImageParser for KittyParser {
                 .find(|vp| vp.image_id == image_id)
                 .copied()
         })
+    }
+}
+/// Place a decoded kitty image at `ctx`'s cursor: crop the source rectangle,
+/// then position it in the grid. `None` when the payload does not decode.
+#[must_use]
+pub fn place_kitty(img: &KittyImage, ctx: ImageCtx) -> Option<Image> {
+    let (w, h, rgba) = img.meta.decode(&img.pixels)?;
+    Some(display(&img.meta, w, h, &rgba, ctx))
+}
+
+/// Build the placed [`Image`] for a decoded payload.
+fn display(
+    meta: &KittyMeta,
+    w: u32,
+    h: u32,
+    rgba: &[u8],
+    ctx: ImageCtx,
+) -> Image {
+    let (cw, ch, cropped) = crop_rgba(
+        rgba,
+        w,
+        h,
+        meta.src.x,
+        meta.src.y,
+        meta.src_size.x,
+        meta.src_size.y,
+    );
+    let col = ctx.cursor_col.saturating_sub(1);
+    let viewport_row = ctx.cursor_row.saturating_sub(1);
+    Image {
+        kind: ImageKind::Kitty,
+        id: if meta.placement_id != 0 { meta.placement_id } else { meta.id },
+        version: crate::parser::next_version(),
+        anchor: USizeVec2::new(col, ctx.screen_start + viewport_row),
+        cell_size: meta.cell_size,
+        size: UVec2::new(cw, ch),
+        cell_offset: meta.cell_offset,
+        z_index: meta.z_index,
+        aspect: UVec2::ONE,
+        pixels: Arc::from(cropped),
     }
 }

@@ -55,52 +55,43 @@ pub(crate) fn scale_fit(
 }
 
 /// Decode an image to `(width, height, RGBA8)`.
-#[cfg(feature = "simple")]
 pub(crate) fn decode_image(bytes: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
-    simple::decode_png(bytes)
-}
-
-/// Decode an image to `(width, height, RGBA8)` via the `image` crate.
-#[cfg(all(
-    not(feature = "simple"),
-    any(feature = "png", feature = "jpeg", feature = "gif", feature = "webp")
-))]
-pub(crate) fn decode_image(bytes: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
-    let img = image::load_from_memory(bytes).ok()?;
-    let (w, h) = (img.width(), img.height());
-    let rgba = img.into_rgba8().into_raw();
-    if rgba.len() > MAX_IMAGE_PAYLOAD {
-        return None;
+    cfg_select! {
+        feature = "simple" => simple::decode_png(bytes),
+        _ => {
+            let img = image::load_from_memory(bytes).ok()?;
+            let (w, h) = (img.width(), img.height());
+            let rgba = img.into_rgba8().into_raw();
+            if rgba.len() > MAX_IMAGE_PAYLOAD {
+                return None;
+            }
+            Some((w, h, rgba))
+        }
     }
-    Some((w, h, rgba))
 }
 
 /// Expand raw RGB (3 bytes/px) into RGBA (4 bytes/px, `α = 255`).
-#[cfg(feature = "simple")]
 pub(crate) fn rgb_to_rgba(
     rgb: &[u8],
     width: u32,
     height: u32,
 ) -> Option<Vec<u8>> {
-    let px = (width as usize).checked_mul(height as usize)?;
-    let mut rgba = vec![0_u8; px * 4];
-    simple::rgb_to_rgba(rgb, &mut rgba);
-    Some(rgba)
-}
-
-/// Expand raw RGB (3 bytes/px) into RGBA (4 bytes/px, `α = 255`).
-#[cfg(all(
-    not(feature = "simple"),
-    any(feature = "png", feature = "jpeg", feature = "gif", feature = "webp")
-))]
-pub(crate) fn rgb_to_rgba(
-    rgb: &[u8],
-    width: u32,
-    height: u32,
-) -> Option<Vec<u8>> {
-    let img =
-        image::RgbImage::from_raw(width.max(1), height.max(1), rgb.to_vec())?;
-    Some(image::DynamicImage::ImageRgb8(img).into_rgba8().into_raw())
+    cfg_select! {
+        feature = "simple" => {
+            let px = (width as usize).checked_mul(height as usize)?;
+            let mut rgba = vec![0_u8; px * 4];
+            simple::rgb_to_rgba(rgb, &mut rgba);
+            Some(rgba)
+        }
+        _ => {
+            let img = image::RgbImage::from_raw(
+                width.max(1),
+                height.max(1),
+                rgb.to_vec(),
+            )?;
+            Some(image::DynamicImage::ImageRgb8(img).into_rgba8().into_raw())
+        }
+    }
 }
 
 pub use parser::ImageParser;
@@ -115,7 +106,7 @@ pub use iterm2::{Iterm2Image, Resize, parse_iterm2, place_iterm2};
 #[cfg(feature = "kitty")]
 pub use kitty::{
     KittyImage, KittyMeta, KittyParser, decode_kitty_file, decode_kitty_raw,
-    decode_kitty_rgba, parse_kitty_meta,
+    decode_kitty_rgba, parse_kitty_meta, place_kitty,
 };
 #[cfg(feature = "sixel")]
 pub use sixel::{SixelImage, SixelParser, decode_sixel};

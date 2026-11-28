@@ -20,7 +20,7 @@ pub fn scale_down_rgba(
 ) -> Option<(Arc<[u8]>, u32, u32)> {
     let (w, h, nw, nh) = crate::scale_fit(width, height, max_w, max_h)?;
     let mut out = vec![0_u8; (nw * nh * 4) as usize];
-    let level = Level::new();
+    let level = Level::try_detect().unwrap_or(Level::baseline());
     dispatch!(level, simd => scale_simd(simd, pixels, w, h, nw, nh, &mut out));
     Some((Arc::from(out), nw, nh))
 }

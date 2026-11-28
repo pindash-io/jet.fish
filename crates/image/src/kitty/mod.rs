@@ -11,6 +11,7 @@ pub use decode::{decode_kitty_file, decode_kitty_raw, decode_kitty_rgba};
 pub use meta::parse_kitty_meta;
 pub use meta::{KittyImage, KittyMeta};
 pub use parser::KittyParser;
+pub use parser::place_kitty;
 
 #[cfg(test)]
 #[path = "../../tests/kitty/mod.rs"]
