@@ -5,7 +5,7 @@
 
 use glam::{U16Vec2, UVec2, Vec2};
 
-use jetfish_text::ScrollAnchor;
+use jetfish_protocol::ScrollAnchor;
 
 use super::Rendering;
 

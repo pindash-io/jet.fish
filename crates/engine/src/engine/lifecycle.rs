@@ -13,22 +13,8 @@ pub trait Lifecycle {
     /// Report the detected color scheme.
     fn set_color_scheme(&mut self, _scheme: u8) {}
 
-    /// Apply a theme: the 16 ANSI colors, the default fg/bg/cursor, and the
-    /// selection highlight.
-    #[allow(
-        clippy::too_many_arguments,
-        reason = "the theme colors are one cohesive set"
-    )]
-    fn set_theme(
-        &mut self,
-        _ansi: &[u32; 16],
-        _foreground: Option<u32>,
-        _background: Option<u32>,
-        _cursor: Option<u32>,
-        _selection: Option<u32>,
-        _selection_text: Option<u32>,
-    ) {
-    }
+    /// Apply a theme (the baked palette + defaults + selection highlight).
+    fn set_theme(&mut self, _theme: &jetfish_protocol::Theme) {}
 
     /// The current default background color (viewport clear) as `[r,g,b,a]`.
     fn default_bg(&self) -> [f32; 4] {
