@@ -24,7 +24,7 @@ pub(crate) fn rgb_to_rgba(rgb: &[u8], rgba: &mut [u8]) {
         rgba.len(),
         "rgba must be 4 bytes per RGB triplet"
     );
-    let level = Level::try_detect().unwrap_or(Level::baseline());
+    let level = Level::try_detect().unwrap_or_else(Level::baseline);
     dispatch!(level, simd => rgb_to_rgba_simd(simd, rgb, rgba));
 }
 
@@ -65,7 +65,7 @@ pub(crate) fn gray_to_rgba(gray: &[u8], rgba: &mut [u8]) {
         rgba.len(),
         "rgba must be 4 bytes per gray byte"
     );
-    let level = Level::try_detect().unwrap_or(Level::baseline());
+    let level = Level::try_detect().unwrap_or_else(Level::baseline);
     dispatch!(level, simd => gray_to_rgba_simd(simd, gray, rgba));
 }
 
@@ -105,7 +105,7 @@ pub(crate) fn gray_alpha_to_rgba(ga: &[u8], rgba: &mut [u8]) {
         rgba.len(),
         "rgba must be 4 bytes per gray-alpha pair"
     );
-    let level = Level::try_detect().unwrap_or(Level::baseline());
+    let level = Level::try_detect().unwrap_or_else(Level::baseline);
     dispatch!(level, simd => gray_alpha_to_rgba_simd(simd, ga, rgba));
 }
 

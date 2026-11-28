@@ -277,7 +277,7 @@ fn fill_rgba(dst: &mut [u8], color: [u8; 3], alpha: u8) {
         }
         return;
     }
-    let level = Level::try_detect().unwrap_or(Level::baseline());
+    let level = Level::try_detect().unwrap_or_else(Level::baseline);
     dispatch!(level, simd => fill_rgba_simd(simd, dst, rgba));
 }
 
