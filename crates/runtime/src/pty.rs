@@ -126,7 +126,7 @@ pub fn spawn(
         .env("TERM", "xterm-256color")
         .env("COLORTERM", "truecolor")
         // For terminal detectors (fastfetch's `terminal` module, etc.).
-        .env("TERM_PROGRAM", "jetfish")
+        .env("TERM_PROGRAM", env!("CARGO_PKG_NAME"))
         .env("TERM_PROGRAM_VERSION", env!("CARGO_PKG_VERSION"));
     // Run the child in a UTF-8 locale: `pbcopy` with `LC_CTYPE=C` decodes
     // UTF-8 as MacRoman (emoji → mojibake). A Finder launch has no `LANG`, so

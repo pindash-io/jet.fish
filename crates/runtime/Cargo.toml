@@ -9,7 +9,7 @@ license.workspace = true
 [dependencies]
 jetfish_log.workspace = true
 jetfish_protocol.workspace = true
-jetfish_screen.workspace = true
+jetfish_screen = { workspace = true, default-features = false }
 
 vtty.workspace = true
 
