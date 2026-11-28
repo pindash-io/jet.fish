@@ -1,7 +1,7 @@
 // Copyright © Fangdun Tsai <fundon@pindash.io>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! SGR color spans over byte offsets, plus span-style lookups.
+//! SGR color spans and span-style lookups.
 
 use core::range::Range;
 
@@ -10,11 +10,10 @@ use vtty::{ColorId, SgrFlags, StyleFlags, UnderlineStyle};
 use crate::Style;
 use crate::new_hasher;
 
-/// A styled text range over `state.text` byte offsets.
+/// A styled byte range over `state.text`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Span {
-    /// Byte range of the span in `state.text` (half-open `start..end`), so a
-    /// line's styled slice is `&text[span.range]`.
+    /// Half-open byte range into `state.text` (`&text[span.range]`).
     pub range: Range<usize>,
     /// The raw SGR style (fg / bg / flags / underline style + color).
     pub style: Style,
@@ -26,10 +25,10 @@ impl Span {
         Self { range, style }
     }
 
-    /// Whether `byte` falls inside this span's half-open `[start, end)` range.
+    /// Whether `index` falls inside this span's `[start, end)` range.
     #[inline]
-    pub fn contains(&self, byte: usize) -> bool {
-        self.range.contains(&byte)
+    pub fn contains(&self, index: usize) -> bool {
+        self.range.contains(&index)
     }
 
     /// Effective foreground: SGR 5 blink paints the background while the
@@ -44,8 +43,7 @@ impl Span {
     }
 }
 
-/// The screen's sorted SGR color spans: a `Vec<Span>` wrapper that adds
-/// byte-addressed lookups and owns the sorted-by-start invariant.
+/// Sorted SGR color spans with byte-index lookups (`Vec<Span>` wrapper).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Spans(Vec<Span>);
 
@@ -55,57 +53,56 @@ impl Spans {
         Self(Vec::new())
     }
 
-    /// The span covering `byte` (`None` in a gap). Sorted by start, so this
-    /// is a binary search.
+    /// The span covering `index`, or `None` in a gap.
     #[inline]
-    pub fn span_at(&self, byte: usize) -> Option<&Span> {
-        // `partition_point` returns the index of the first span starting after
-        // `byte`; the covering span, if any, is the one immediately before it.
-        let idx = self.partition_point(|sp| sp.range.start <= byte);
+    pub fn span_at(&self, index: usize) -> Option<&Span> {
+        // The covering span (if any) is the last one starting at or before
+        // `index`.
+        let idx = self.partition_point(|sp| sp.range.start <= index);
         let sp = self.get(idx.checked_sub(1)?)?;
-        sp.contains(byte).then_some(sp)
+        sp.contains(index).then_some(sp)
     }
 
-    /// Background palette id for a byte offset.
+    /// Background palette id at `index`.
     #[must_use]
     #[inline]
-    pub fn bg_at(&self, byte: usize, default_bg: ColorId) -> ColorId {
-        self.span_at(byte).map_or(default_bg, |sp| sp.style.bg)
+    pub fn bg_at(&self, index: usize, default_bg: ColorId) -> ColorId {
+        self.span_at(index).map_or(default_bg, |sp| sp.style.bg)
     }
 
-    /// Foreground palette id + decoration flags for a byte offset. `blink`
-    /// is the caller's SGR-5 blink phase (kept pure here).
+    /// Foreground palette id + decoration flags at `index`. `blink` is the
+    /// caller's SGR-5 blink phase (kept pure here).
     #[must_use]
     #[inline]
     pub fn style_at(
         &self,
-        byte: usize,
+        index: usize,
         default_fg: ColorId,
         blink: bool,
     ) -> (ColorId, StyleFlags) {
-        match self.span_at(byte) {
+        match self.span_at(index) {
             Some(sp) => (sp.effective_fg(blink), sp.style.flags.decorations()),
             None => (default_fg, StyleFlags::empty()),
         }
     }
 
-    /// Full `SgrFlags` for a byte offset (including INVERSE/BLINK, which
-    /// [`Spans::style_at`]'s decoration subset drops).
+    /// Full `SgrFlags` at `index` (including INVERSE/BLINK, which
+    /// [`Spans::style_at`] drops).
     #[must_use]
     #[inline]
-    pub fn flags_at(&self, byte: usize) -> SgrFlags {
-        self.span_at(byte).map_or(SgrFlags::DEFAULT, |sp| sp.style.flags)
+    pub fn flags_at(&self, index: usize) -> SgrFlags {
+        self.span_at(index).map_or(SgrFlags::DEFAULT, |sp| sp.style.flags)
     }
 
-    /// Underline style + color id for a byte offset. The color is `None` for
-    /// the default (foreground) underline color.
+    /// Underline style + color id at `index`. The color is `None` for the
+    /// default underline color.
     #[must_use]
     #[inline]
     pub fn underline_at(
         &self,
-        byte: usize,
+        index: usize,
     ) -> (UnderlineStyle, Option<ColorId>) {
-        self.span_at(byte).map_or((UnderlineStyle::None, None), |sp| {
+        self.span_at(index).map_or((UnderlineStyle::None, None), |sp| {
             (sp.style.underline_style, sp.style.underline_color)
         })
     }
