@@ -9,7 +9,12 @@ use std::ops::{Deref, DerefMut};
 use compact_str::CompactString;
 use glam::USizeVec2;
 
+use vtty::ProgramStatus;
+
 use jetfish_command::Osc52;
+use jetfish_command::command::dcs_query_kind;
+use jetfish_image::MAX_IMAGE_PAYLOAD;
+use jetfish_image::{ImageCtx, ImageParsers, ParseOutcome};
 use jetfish_protocol::{Grid, Theme};
 
 /// Window-title state: the OSC 0/1/2 title, the CSI 22/23 push/pop stack, and
@@ -63,15 +68,12 @@ pub struct ScreenShared<T = ()> {
     /// BEL (`0x07`) seen since the last consume, for the host to flash or beep.
     pub bell_pending: bool,
     /// Latest OSC 7501 program-status report, if any.
-    pub program_status: Option<vtty_status::ProgramStatus>,
+    pub program_status: Option<ProgramStatus>,
     /// Pending `CSI 8;rows;cols t` resize request for the host.
     pub pending_resize: Option<Grid>,
-    /// Host reply queued for the PTY, flushed in `poll` so query bursts
-    /// answer in order.
+    /// Host reply queued for the PTY, flushed by the engine after `advance`
+    /// so query bursts answer in order.
     pub pending_reply: Option<Vec<u8>>,
-    /// PTY fd for query responses (`None` = headless/tests). The screen
-    /// owns this duplicate so writes are safe.
-    pub pty_fd: Option<std::os::fd::OwnedFd>,
     /// Terminal image infrastructure (decode buffers, cell size, parsers).
     pub image: ImageState,
     /// Screen-specific extension (cell metrics, reply queues, OSC overrides).
@@ -97,7 +99,6 @@ impl<T: Default> ScreenShared<T> {
             program_status: None,
             pending_resize: None,
             pending_reply: None,
-            pty_fd: None,
             image: ImageState::default(),
             extend: T::default(),
             scrollback_erased: false,
@@ -105,8 +106,7 @@ impl<T: Default> ScreenShared<T> {
     }
 }
 
-/// Route screen-specific extension fields (`self.shared.cell.x`, …) straight
-/// to the extension type.
+/// Route the screen-specific extension fields straight to the extension type.
 impl<T> Deref for ScreenShared<T> {
     type Target = T;
     fn deref(&self) -> &T {
@@ -130,7 +130,7 @@ pub struct ImageState {
     /// `(hex_encoded, payload)`. Buffered on hook, decoded on unhook.
     pub dcs_query: Option<(bool, Vec<u8>)>,
     /// The registered image parsers (kitty + Sixel built-ins, plus custom).
-    pub parsers: jetfish_image::ImageParsers,
+    pub parsers: ImageParsers,
 }
 
 impl Default for ImageState {
@@ -138,7 +138,7 @@ impl Default for ImageState {
         Self {
             image_buf: None,
             dcs_query: None,
-            parsers: jetfish_image::ImageParsers::default_parsers(),
+            parsers: ImageParsers::default_parsers(),
         }
     }
 }
@@ -147,9 +147,7 @@ impl ImageState {
     /// Begin a DCS/APC payload: a query (`DCS $ q` DECRQSS / `DCS + q`
     /// XTGETTCAP) or an image (`DCS q` / `APC _G`).
     pub fn begin(&mut self, ints: &[u8], final_byte: u8) {
-        if let Some(hex) =
-            jetfish_command::command::dcs_query_kind(ints, final_byte)
-        {
+        if let Some(hex) = dcs_query_kind(ints, final_byte) {
             self.dcs_query = Some((hex, Vec::new()));
         } else {
             // Small sixel/kitty payloads dominate; reserve so the per-byte
@@ -159,13 +157,13 @@ impl ImageState {
     }
 
     /// Push `byte` into the active DCS payload buffer (query or image),
-    /// capped at [`jetfish_image::MAX_IMAGE_PAYLOAD`].
+    /// capped at [`MAX_IMAGE_PAYLOAD`].
     pub fn push(&mut self, byte: u8) {
-        self.push_slice(std::slice::from_ref(&byte));
+        self.push_slice(&[byte]);
     }
 
     /// Bulk append into the active DCS payload (query or image), capped at
-    /// [`jetfish_image::MAX_IMAGE_PAYLOAD`]: one extend, not per-byte `put`.
+    /// [`MAX_IMAGE_PAYLOAD`]: one extend, not per-byte `put`.
     pub fn push_slice(&mut self, bytes: &[u8]) {
         let buf = self
             .dcs_query
@@ -173,7 +171,7 @@ impl ImageState {
             .map(|(_, b)| b)
             .or_else(|| self.image_buf.as_mut().map(|(_, b)| b));
         let Some(buf) = buf else { return };
-        let rem = jetfish_image::MAX_IMAGE_PAYLOAD.saturating_sub(buf.len());
+        let rem = MAX_IMAGE_PAYLOAD.saturating_sub(buf.len());
         buf.extend_from_slice(&bytes[..bytes.len().min(rem)]);
     }
 
@@ -184,22 +182,18 @@ impl ImageState {
         self.dcs_query.take()
     }
 
-    /// Offer the buffered image payload to each registered parser, first
-    /// recognizer winning: the shared `unhook` tail of both screens' dispatch.
+    /// Offer the buffered image payload to each registered parser; the first
+    /// recognizer wins.
     #[must_use]
-    pub fn finish_image(
-        &mut self,
-        ctx: jetfish_image::ImageCtx,
-    ) -> jetfish_image::ParseOutcome {
+    pub fn finish_image(&mut self, ctx: ImageCtx) -> ParseOutcome {
         let Some((final_byte, payload)) = self.image_buf.take() else {
-            return jetfish_image::ParseOutcome::Skip;
+            return ParseOutcome::Skip;
         };
-        let mut outcome = jetfish_image::ParseOutcome::Skip;
+        let mut outcome = ParseOutcome::Skip;
         for parser in self.parsers.iter_mut() {
             match parser.parse(&payload, final_byte, ctx) {
-                jetfish_image::ParseOutcome::Skip => continue,
-                done @ (jetfish_image::ParseOutcome::Consumed
-                | jetfish_image::ParseOutcome::Handled(_)) => {
+                ParseOutcome::Skip => continue,
+                done @ (ParseOutcome::Consumed | ParseOutcome::Handled(_)) => {
                     outcome = done;
                     break;
                 }

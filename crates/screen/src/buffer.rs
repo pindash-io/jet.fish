@@ -42,8 +42,7 @@ pub struct BufferState {
     /// The decoded terminal images (Sixel / kitty / iTerm2), keyed by the
     /// kitty image id (`0` for Sixel/iTerm2). Per-buffer.
     pub images: HashMap<u32, Image>,
-    /// The most recently placed image id, so [`BufferState::image`] returns
-    /// the image the tests and single-image paths expect.
+    /// The most recently placed image id ([`BufferState::image`]).
     pub last_image_id: Option<u32>,
 }
 
@@ -79,8 +78,7 @@ impl BufferState {
         }
     }
 
-    /// The most recently placed image (the single-image accessor the tests
-    /// and legacy call sites use).
+    /// The most recently placed image.
     #[inline]
     pub fn image(&self) -> Option<&Image> {
         self.last_image_id.and_then(|id| self.images.get(&id))
@@ -119,8 +117,8 @@ impl BufferState {
     #[inline]
     pub fn apply_shell_prompt(&mut self, shell_prompt: ShellPrompt) -> u8 {
         self.shell = shell_prompt;
-        // FinalTerm/iTerm2 edges: `C` = output began (running), `A`/`D` =
-        // fresh prompt / finished (idle); `B` (pre-exec) is not an edge itself.
+        // OSC 133 edges: `C` = running, `A`/`D` = idle; `B` (pre-exec) is not
+        // an edge.
         match self.shell.action {
             b'C' => {
                 self.activity = Activity::Running;

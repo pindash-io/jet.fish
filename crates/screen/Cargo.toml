@@ -7,19 +7,19 @@ rust-version.workspace = true
 license.workspace = true
 
 [features]
-default = ["kitty", "iterm2", "simd"]
-simd = ["jetfish_protocol/simd", "vtty_width/simd", "vtty/simd-transcode"]
+default = ["kitty", "iterm2", "sixel", "simd"]
+simd = ["jetfish_protocol/simd", "vtty/simd-transcode"]
 kitty = ["jetfish_command/kitty", "jetfish_image/kitty"]
 iterm2 = ["jetfish_command/iterm2", "jetfish_image/iterm2"]
+sixel = ["jetfish_image/sixel"]
 
 [dependencies]
-jetfish_command.workspace = true
-jetfish_image.workspace = true
+jetfish_command = { workspace = true, default-features = false }
+jetfish_image = { workspace = true, default-features = false }
 jetfish_protocol.workspace = true
 
 vtty.workspace = true
 vtty_status.workspace = true
-vtty_width.workspace = true
 
 compact_str.workspace = true
 glam.workspace = true

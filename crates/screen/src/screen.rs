@@ -5,7 +5,6 @@
 //! alternate buffer and derefs to the active one.
 
 use std::ops::{Deref, DerefMut};
-use std::os::fd::AsFd as _;
 use std::sync::Arc;
 
 use compact_str::CompactString;
@@ -13,15 +12,17 @@ use glam::USizeVec2;
 
 use vtty::{CursorStyle, MouseTracking, Scs, TermFlags};
 
+use jetfish_command::command;
+use jetfish_command::query;
 use jetfish_command::{ColorCommand, DefaultColor, Osc52, QueryContext};
 use jetfish_protocol::{Activity, Grid, Progress};
 use jetfish_protocol::{Defaults, Highlight, Palette};
-use jetfish_protocol::{color_scheme, hex_decode, write_fd_all};
+use jetfish_protocol::{color_scheme, hex_decode};
 
 use crate::{BufferState, Mouse, ScreenShared};
 
-/// A per-screen buffer type. The shared lifecycle lives here so `Screen` can
-/// reset/resize both buffers uniformly.
+/// A per-screen buffer type, so `Screen` can reset/resize both buffers
+/// uniformly.
 pub trait State: Sized {
     /// A fresh buffer with the given terminal dimensions.
     fn fresh(grid: Grid) -> Self;
@@ -37,14 +38,13 @@ pub trait State: Sized {
     /// Resize the alternate buffer to exactly `rows` (fixed grid).
     fn resize_alt(&mut self, rows: usize);
 
-    /// Immutable access to the shared per-buffer shell state.
+    /// Immutable access to the per-buffer shell state.
     fn buf(&self) -> &BufferState;
 
-    /// Mutable access to the shared per-buffer shell state.
+    /// Mutable access to the per-buffer shell state.
     fn buf_mut(&mut self) -> &mut BufferState;
 
-    /// The per-buffer input-mode state (mouse, kitty keyboard, modifyOtherKeys),
-    /// so the shell can answer mode queries without knowing the concrete state.
+    /// The per-buffer input-mode state (mouse, kitty keyboard, modifyOtherKeys).
     fn mouse(&self) -> &Mouse;
 
     /// Mutable access to the per-buffer input-mode state.
@@ -70,12 +70,11 @@ pub trait State: Sized {
         self.buf().shell.cmdline.as_deref()
     }
 
-    /// The DECRQSS ` q` cursor-style reply (`1`..`6` plus blink), the one shared
-    /// arm of [`State::decrqss_value`].
+    /// The DECRQSS ` q` cursor-style reply (`1`..`6` plus blink).
     fn decrqss_cursor_style_value(&self) -> (bool, CompactString) {
         (
             true,
-            jetfish_command::query::decrqss_cursor_style(
+            query::decrqss_cursor_style(
                 self.buf().cursor_shape,
                 self.buf().flags.contains(TermFlags::CURSOR_BLINK),
             ),
@@ -91,14 +90,13 @@ pub trait State: Sized {
         palette: &[u32],
     ) -> (bool, CompactString);
 
-    /// The per-buffer palette override, materialized from the shared theme on
-    /// first use, so the shell can apply OSC colors without the concrete state.
+    /// The per-buffer palette override, materialized from the theme default on
+    /// first mutation.
     fn palette(&mut self) -> &mut Option<Palette> {
         &mut self.buf_mut().palette
     }
 
-    /// The per-buffer palette override, split from [`State::palette`] so the
-    /// shell can read it without a mutable borrow.
+    /// The per-buffer palette override, read-only ([`State::palette`] mutates).
     fn palette_ref(&self) -> Option<&Palette> {
         self.buf().palette.as_ref()
     }
@@ -130,7 +128,7 @@ pub trait State: Sized {
         self.buf().flags.contains(TermFlags::NUMLOCK)
     }
 
-    /// Whether XTPUSHKEYS bracketed paste mode (`CSI ?2004h`) is active.
+    /// Whether bracketed paste (`CSI ?2004h`) is active.
     fn bracketed_paste(&self) -> bool {
         self.buf().flags.contains(TermFlags::BRACKETED_PASTE)
     }
@@ -148,13 +146,15 @@ pub trait State: Sized {
     fn mouse_tracking(&self) -> MouseTracking;
 }
 
-/// Input accessors for a whole screen: the kitty/cursor/mouse ones delegate to
-/// [`State`], and a concrete impl supplies the buffer accessor and cell size.
+/// Input accessors for a whole screen: most delegate to [`State`]; a concrete
+/// impl supplies the grid and cell size.
 pub trait TermInput {
     /// The active buffer state (which implements [`State`]).
     type State: State;
     /// The active buffer state.
     fn state(&self) -> &Self::State;
+    /// The terminal grid size in cells (`.x` = cols, `.y` = rows).
+    fn grid(&self) -> USizeVec2;
     /// The grid cell size in whole pixels (for pixel mouse reports).
     fn cell_px(&self) -> USizeVec2;
 
@@ -183,7 +183,7 @@ pub trait TermInput {
         self.state().numlock_ignored()
     }
 
-    /// Whether XTPUSHKEYS bracketed paste mode (`CSI ?2004h`) is active.
+    /// Whether bracketed paste (`CSI ?2004h`) is active.
     fn bracketed_paste(&self) -> bool {
         self.state().bracketed_paste()
     }
@@ -263,8 +263,8 @@ impl<S: State, T> Screen<S, T> {
         }
         if mode.intersects(
             TermFlags::ALT_SCREEN
-                | TermFlags::ALT_SCREEN_1047
-                | TermFlags::ALT_SCREEN_1049,
+                .union(TermFlags::ALT_SCREEN_1047)
+                .union(TermFlags::ALT_SCREEN_1049),
         ) {
             return self.alt_active;
         }
@@ -276,7 +276,7 @@ impl<S: State, T> Screen<S, T> {
     #[must_use]
     pub fn decrqm_state(&self, param: i32, private: bool) -> u8 {
         let mode = TermFlags::from_mode_code(param, private);
-        jetfish_command::query::decrqm_status(mode, self.mode_state(mode))
+        query::decrqm_status(mode, self.mode_state(mode))
     }
 
     /// The effective palette: the active buffer's themed override, else the
@@ -314,15 +314,12 @@ impl<S: State, T> Screen<S, T> {
 
     /// Apply an OSC 21 (kitty color protocol) payload: apply the `Set`/`Reset`
     /// ops and reply to the `Query` ops.
-    pub fn apply_kitty_color(
-        &mut self,
-        ops: &[jetfish_command::command::KittyColorOp],
-    ) {
+    pub fn apply_kitty_color(&mut self, ops: &[command::KittyColorOp]) {
         let reply = {
             let Self { main, alt, alt_active, shared } = self;
             let state = if *alt_active { alt } else { main };
             materialize_palette(state, &shared.theme.palette);
-            jetfish_command::command::kitty_color_apply(
+            command::kitty_color_apply(
                 state.palette().as_mut().expect("materialized above"),
                 &mut shared.theme.defaults,
                 &mut shared.theme.highlight,
@@ -461,15 +458,10 @@ impl<S: State, T> Screen<S, T> {
         vtty::Reply::decrqss(valid, &value)
     }
 
-    /// Build the XTGETTCAP reply for a termcap query; only the reply
-    /// transport differs.
+    /// Build the XTGETTCAP reply for a termcap query.
     #[must_use]
     pub fn termcap_reply(&self, cap: &[u8]) -> CompactString {
-        jetfish_command::query::termcap_reply(
-            cap,
-            self.shared.grid.x,
-            self.shared.grid.y,
-        )
+        query::termcap_reply(cap, self.shared.grid.x, self.shared.grid.y)
     }
 
     /// Emit a DECRQM reply (`CSI Ps$p` / `CSI ?Ps$p`).
@@ -479,25 +471,23 @@ impl<S: State, T> Screen<S, T> {
         self.push_reply(reply.as_bytes());
     }
 
-    /// Emit a DECRQSS reply through the shared reply transport.
+    /// Emit a DECRQSS reply through the reply transport.
     pub fn reply_decrqss(&mut self, setting: &[u8]) {
         let reply = self.decrqss_reply(setting);
         self.push_reply(reply.as_bytes());
     }
 
-    /// Emit an XTGETTCAP reply through the shared reply transport.
+    /// Emit an XTGETTCAP reply through the reply transport.
     pub fn reply_termcap(&mut self, cap: &[u8]) {
         let reply = self.termcap_reply(cap);
         self.push_reply(reply.as_bytes());
     }
 
     /// Emit the XTPOPCOLORS color-stack depth report (`OSC 4` style, `CSI
-    /// #Q` count) through the shared reply transport.
+    /// #Q` count) through the reply transport.
     pub fn reply_color_stack_report(&mut self) {
         let len = self.state().buf().color_stack.len();
-        self.push_reply(
-            jetfish_command::query::color_stack_report(len).as_bytes(),
-        );
+        self.push_reply(query::color_stack_report(len).as_bytes());
     }
 
     /// Reset both buffers to power-on and leave the alternate screen.
@@ -507,9 +497,9 @@ impl<S: State, T> Screen<S, T> {
         self.alt.reset(grid);
     }
 
-    /// The shared DECSTR (`CSI ! p`) tail: DEC modes, mouse tracking, charset,
-    /// DECSLRM margins, modifyOtherKeys and the image parsers. Each screen still
-    /// resets its own storage (cursor, region, pen).
+    /// DECSTR (`CSI ! p`) shared state: DEC modes, mouse, charset, DECSLRM
+    /// margins, modifyOtherKeys, image parsers. Each screen resets its own
+    /// storage (cursor, region, pen).
     pub fn soft_reset_shared(&mut self) {
         {
             let buf = self.state_mut().buf_mut();
@@ -670,7 +660,7 @@ impl<S: State, T> Screen<S, T> {
         tracking: bool,
     ) -> Option<CompactString> {
         self.shared.theme.detected_scheme = Some(scheme);
-        tracking.then(|| jetfish_command::query::color_scheme_report(scheme))
+        tracking.then(|| query::color_scheme_report(scheme))
     }
 
     /// The effective color scheme (`1` dark, `2` light): the host-reported
@@ -762,26 +752,16 @@ impl<S: State, T> Screen<S, T> {
         self.shared.mouse_cursor.take()
     }
 
-    /// Send a host reply: straight to an attached PTY, else to `pending_reply`,
-    /// which the in-memory harness asserts on. Order is kept either way.
+    /// Queue a host reply in `pending_reply`; the engine flushes it to the
+    /// PTY after `advance` (the in-memory harness asserts on it directly).
     pub fn push_reply(&mut self, reply: &[u8]) {
-        if self.shared.pty_fd.is_some() {
-            self.write_pty(reply);
-            return;
-        }
         match &mut self.shared.pending_reply {
             Some(buf) => buf.extend_from_slice(reply),
             None => self.shared.pending_reply = Some(reply.to_vec()),
         }
     }
 
-    /// Write raw bytes to the attached PTY (no-op when detached).
-    pub fn write_pty(&self, data: &[u8]) {
-        let Some(fd) = &self.shared.pty_fd else { return };
-        write_fd_all(fd.as_fd(), data);
-    }
-
-    /// Take the queued host reply, if any (flushed to the PTY by `poll`).
+    /// Take the queued host reply, if any.
     pub const fn take_pending_reply(&mut self) -> Option<Vec<u8>> {
         self.shared.pending_reply.take()
     }
@@ -808,6 +788,10 @@ impl<S: State, T> TermInput for Screen<S, T> {
         Self::state(self)
     }
 
+    fn grid(&self) -> USizeVec2 {
+        self.shared.grid
+    }
+
     fn cell_px(&self) -> USizeVec2 {
         self.shared.cell
     }
@@ -823,8 +807,7 @@ fn materialize_palette<S: State>(state: &mut S, default: &Arc<Palette>) {
     *slot = Some((**default).clone());
 }
 
-/// Apply an OSC color mutation to the shared palette and the default/highlight
-/// colors, which both screens share, so it lives here once.
+/// Apply an OSC color mutation to the palette and the default/highlight colors.
 fn apply_color_shared(
     palette: &mut Palette,
     defaults: &mut Defaults<u32>,

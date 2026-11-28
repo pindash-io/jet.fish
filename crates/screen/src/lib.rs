@@ -1,15 +1,8 @@
 // Copyright © Fangdun Tsai <fundon@pindash.io>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! `jetfish_screen`: the shared screen shell, the main/alt dual-buffer [`Screen`]
-//! and the [`ScreenShared`] context both screen models embed.
-//!
-//! The cell screen itself (`CellScreen`) lives in `jetfish_cell`.
-//!
-//! - `screen.rs`: generic [`Screen`] shell.
-//! - `shared.rs`: [`ScreenShared`] (grid, palette, OSC 52 policy, …).
-//! - `buffer.rs`: per-buffer `BufferState`.
-//! - `input_state.rs`: mouse and kitty-keyboard input state.
+//! `jetfish_screen` — the main/alt dual-buffer [`Screen`] shell and the
+//! [`ScreenShared`] context, embedded by `jetfish_cell`'s `CellScreen`.
 
 #![warn(missing_debug_implementations)]
 #![deny(missing_docs)]

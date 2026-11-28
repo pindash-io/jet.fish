@@ -2,15 +2,8 @@
 
 <!-- cargo-rdme start -->
 
-`jetfish_screen` — the shared screen shell: the main/alt dual-buffer
-[`Screen`](https://docs.rs/jetfish_screen/latest/jetfish_screen/screen/struct.Screen.html) and the [`ScreenShared`](https://docs.rs/jetfish_screen/latest/jetfish_screen/shared/struct.ScreenShared.html) context both screen models embed.
-
-The cell screen itself (`CellScreen`) lives in `jetfish_cell`.
-
-- `screen.rs` — generic [`Screen`](https://docs.rs/jetfish_screen/latest/jetfish_screen/screen/struct.Screen.html) shell.
-- `shared.rs` — [`ScreenShared`](https://docs.rs/jetfish_screen/latest/jetfish_screen/shared/struct.ScreenShared.html) (grid, palette, OSC 52 policy, …).
-- `buffer.rs` — per-buffer `BufferState`.
-- `input_state.rs` — mouse and Kitty-keyboard input state.
+`jetfish_screen` — the main/alt dual-buffer
+[`Screen`](https://docs.rs/jetfish_screen/latest/jetfish_screen/screen/struct.Screen.html) shell and the [`ScreenShared`](https://docs.rs/jetfish_screen/latest/jetfish_screen/shared/struct.ScreenShared.html) context, embedded by `jetfish_cell`'s `CellScreen`.
 
 <!-- cargo-rdme end -->
 

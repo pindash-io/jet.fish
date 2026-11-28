@@ -55,8 +55,7 @@ pub struct Mouse {
     /// Tracking mode: 0 = off, 9 = X10, 1000 = press, 1002 = drag,
     /// 1003 = any motion. The modes are mutually exclusive.
     pub mode: u16,
-    /// Protocol flags (DEC 1006 SGR, 1005 UTF-8, 1016 pixel): the mode-free half
-    /// of the vtty [`MouseTracking`] summary.
+    /// Protocol flags (DEC 1006 SGR, 1005 UTF-8, 1016 pixel).
     pub flags: MouseTracking,
     /// Focus in/out reporting (DEC 1004).
     pub focus: bool,
@@ -199,8 +198,8 @@ impl Mouse {
         }
         if mode.intersects(
             TermFlags::MOUSE_NORMAL
-                | TermFlags::MOUSE_BUTTON
-                | TermFlags::MOUSE_ANY,
+                .union(TermFlags::MOUSE_BUTTON)
+                .union(TermFlags::MOUSE_ANY),
         ) {
             self.mode = if on {
                 u16::try_from(mode.private_param()).unwrap_or(Self::MODE_OFF)
