@@ -89,11 +89,11 @@ pub use width::{
 
 pub mod geometry;
 pub use geometry::{
-    VerticalMotion, cells_to_px, clamp_col, clamp_pair, clamp_rect_to_page,
-    clamp_row, clamp_to_grid, high_limit, inside_margins, is_full_viewport,
-    line_feed, low_limit, origin_home, origin_offset, outside_margins,
-    px_to_cells, px_to_cells_floor, px_to_cells_round, reverse_index,
-    scroll_bounds, viewport_row, viewport_start,
+    ScrollAnchor, VerticalMotion, cells_to_px, clamp_col, clamp_pair,
+    clamp_rect_to_page, clamp_row, clamp_to_grid, high_limit, inside_margins,
+    is_full_viewport, line_feed, low_limit, origin_home, origin_offset,
+    outside_margins, px_to_cells, px_to_cells_floor, px_to_cells_round,
+    reverse_index, scroll_bounds, viewport_row, viewport_start,
 };
 
 pub mod padding;
@@ -128,7 +128,7 @@ pub use input::{
 pub use uri::{cwd_path, percent_decode};
 
 pub mod hash;
-pub use hash::{FixedHasher, HashMap, HashSet, new_hasher};
+pub use hash::{FixedState, HashMap, HashSet, new_hasher};
 
 /// The protocol primitives every screen touches, for `use
 /// jetfish_protocol::prelude::*;`. Types only; free functions stay explicit.

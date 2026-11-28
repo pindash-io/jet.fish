@@ -8,33 +8,15 @@ use core::hash::BuildHasher;
 
 pub use foldhash::fast::{FixedState, FoldHasher};
 
-/// A fixed seed so cache keys are deterministic across processes.
-const FIXED_HASHER: FixedState = FixedState::with_seed(
-    0b1001010111101110000001001100010000000011001001101011001001111000,
-);
-
-/// Deterministic `BuildHasher` (random-but-fixed state).
-#[derive(Copy, Clone, Default, Debug)]
-pub struct FixedHasher;
-
 /// `hashbrown` map with the deterministic foldhash hasher.
-pub type HashMap<K, V> = hashbrown::HashMap<K, V, FixedHasher>;
+pub type HashMap<K, V> = hashbrown::HashMap<K, V, FixedState>;
 
 /// `hashbrown` set with the deterministic foldhash hasher.
-pub type HashSet<K> = hashbrown::HashSet<K, FixedHasher>;
-
-impl BuildHasher for FixedHasher {
-    type Hasher = FoldHasher<'static>;
-
-    #[inline]
-    fn build_hasher(&self) -> Self::Hasher {
-        FIXED_HASHER.build_hasher()
-    }
-}
+pub type HashSet<K> = hashbrown::HashSet<K, FixedState>;
 
 /// A fresh deterministic cache-key hasher.
 #[must_use]
 #[inline]
 pub fn new_hasher() -> FoldHasher<'static> {
-    FIXED_HASHER.build_hasher()
+    FixedState::default().build_hasher()
 }

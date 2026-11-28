@@ -244,6 +244,39 @@ pub fn clamp_rect_to_page(
     (top.min(rows), left.min(cols), bottom.min(rows), right.min(cols))
 }
 
+/// How to keep the viewport anchored when the window resizes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ScrollAnchor {
+    /// Follow the dragged edge (top edge keeps bottom, bottom keeps top).
+    Auto,
+    /// Keep the top line fixed.
+    Top,
+    /// Keep the bottom line fixed.
+    Bottom,
+    /// Keep the viewport centered.
+    Center,
+    /// Leave the scroll offset fixed on resize.
+    Off,
+}
+
+impl ScrollAnchor {
+    /// The default anchor: follow the dragged edge while the content
+    /// overflows; a fitting buffer is always pinned to the top.
+    pub const DEFAULT: Self = Self::Auto;
+
+    /// Parse an anchor name. Unrecognized names fall back to [`Self::Auto`].
+    #[must_use]
+    pub fn parse(name: &str) -> Self {
+        match name.trim().to_ascii_lowercase().as_str() {
+            "top" => Self::Top,
+            "bottom" => Self::Bottom,
+            "center" | "middle" => Self::Center,
+            "off" | "none" | "fixed" => Self::Off,
+            _ => Self::Auto,
+        }
+    }
+}
+
 #[cfg(test)]
 #[path = "../tests/geometry/mod.rs"]
 mod tests;

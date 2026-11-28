@@ -42,7 +42,7 @@ impl Default for Defaults<u32> {
 
 /// All shared color state in one place: the baked palette, the three defaults,
 /// the selection highlight and the host-detected scheme.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Theme {
     /// The default palette (baked xterm-256 + defaults). Shared via `Arc`;
     /// each buffer keeps an optional themed override ([`Palette`]).
@@ -64,6 +64,38 @@ impl Default for Theme {
             highlight: Highlight::default(),
             detected_scheme: None,
         }
+    }
+}
+
+impl Theme {
+    /// A themed instance from the resolved 16 ANSI colors + defaults.
+    #[must_use]
+    pub fn themed(
+        ansi: &[u32; 16],
+        foreground: Option<u32>,
+        background: Option<u32>,
+        cursor: Option<u32>,
+        selection: Option<u32>,
+        selection_text: Option<u32>,
+    ) -> Self {
+        let mut theme = Self::default();
+        let mut palette = theme.palette.as_ref().clone();
+        palette.set_ansi(ansi);
+        palette.set_default_fg(foreground);
+        palette.set_default_bg(background);
+        theme.palette = Arc::new(palette);
+        if let Some(v) = foreground {
+            theme.defaults.fg = v;
+        }
+        if let Some(v) = background {
+            theme.defaults.bg = v;
+        }
+        if let Some(v) = cursor {
+            theme.defaults.cursor = v;
+        }
+        theme.highlight.fg = selection_text;
+        theme.highlight.bg = selection;
+        theme
     }
 }
 

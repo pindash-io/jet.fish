@@ -17,7 +17,7 @@ vtty_width.workspace = true
 
 bitflags.workspace = true
 color.workspace = true
-compact_str.workspace = true
+compact_str = { workspace = true, features = ["serde"] }
 foldhash.workspace = true
 glam.workspace = true
 hashbrown.workspace = true
