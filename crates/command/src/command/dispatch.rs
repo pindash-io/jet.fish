@@ -6,7 +6,7 @@
 
 use jetfish_protocol::CursorPos;
 
-use crate::command::{Command, Csi, CsiCtx, Esc, Osc, Osc52, Query};
+use crate::command::{Command, Csi, CsiCtx, Esc, Move, Osc, Osc52, Query};
 use crate::commands::Apply;
 
 /// One escape-sequence family's worth of the [`vtty::Perform`] surface.
@@ -127,13 +127,67 @@ pub fn dispatch_csi<S: Apply + ?Sized>(
     final_byte: u8,
     ctx: CsiCtx,
 ) {
-    // `>4m` / `?4m` are the only `m` forms that need the full parse.
-    let special = matches!(ints.first(), Some(b'>' | b'?'))
-        && params.first().copied().unwrap_or(0) == 4;
+    let first = params.first().copied();
+
+    // Direct relative motion: CUU/CUD/CUF/CUB plus the HPR/VPR/HPB/VPB
+    // spellings. Takes the 24-byte `Move`, not the whole `Command`. An
+    // intermediate changes the meaning (`CSI 1 SP A` is SR, `CSI 1 SP k` is
+    // SCP), so this only covers the bare final byte.
+    if ints.is_empty() {
+        let n = first.unwrap_or(1).max(1) as usize;
+        match final_byte {
+            b'A' | b'k' => {
+                s.dispatch_move(Move::Up(n));
+                return;
+            }
+            b'B' | b'e' => {
+                s.dispatch_move(Move::Down(n));
+                return;
+            }
+            b'C' | b'a' => {
+                s.dispatch_move(Move::Right(n));
+                return;
+            }
+            b'D' | b'j' => {
+                s.dispatch_move(Move::Left(n));
+                return;
+            }
+            _ => {}
+        }
+    }
+
+    // Direct erase: `CSI Ps J` / `CSI Ps K` and their `?` selective forms.
+    if let b'J' | b'K' = final_byte {
+        let bare = ints.is_empty();
+        let selective = ints == *b"?";
+        if bare || selective {
+            s.dispatch_erase(
+                first.unwrap_or(0).clamp(0, 255) as u8,
+                final_byte == b'K',
+                selective,
+            );
+            return;
+        }
+    }
+
+    // Direct single mode: `CSI Ps h` / `CSI Ps l`, including `?2026h`.
+    if matches!(final_byte, b'h' | b'l') && ints.len() <= 1 {
+        let private = ints == *b"?";
+        if (private || ints.is_empty())
+            && let [code] = params
+            && !(private && *code == 1048)
+        {
+            s.dispatch_mode(*code, private, final_byte == b'h');
+            return;
+        }
+    }
 
     match final_byte {
         // Direct SGR: plain `m` dominates full-screen TUIs.
-        b'm' if !special => {
+        // And not `>4m` / `?4m` are the only `m` forms that need the full parse.
+        b'm' if !(matches!(ints.first(), Some(b'>' | b'?'))
+            && first.unwrap_or(0) == 4) =>
+        {
             s.apply_sgr(params, sep);
             return;
         }
@@ -142,7 +196,7 @@ pub fn dispatch_csi<S: Apply + ?Sized>(
         b'H' | b'f' => {
             let mut pos = CursorPos::new(
                 params.get(1).copied().unwrap_or(1).max(1) as usize - 1,
-                params.first().copied().unwrap_or(1).max(1) as usize - 1,
+                first.unwrap_or(1).max(1) as usize - 1,
             );
             if ctx.decom {
                 pos = (pos + CursorPos::new(ctx.margin.x, ctx.scroll.x))

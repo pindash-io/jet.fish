@@ -87,11 +87,11 @@ impl ReplyEntry {
     /// Append this entry's `Pk = value` (or `unknown = <base64>`) wire form.
     fn append_to(&self, out: &mut CompactString) {
         match self {
-            &Self::Color(key, rgb) => {
-                out.push_str(&key_wire(key));
+            Self::Color(key, rgb) => {
+                out.push_str(&key_wire(*key));
                 out.push('=');
                 if let Some(rgb) = rgb {
-                    out.push_str(&rgb_spec(rgb));
+                    out.push_str(&rgb_spec(*rgb));
                 }
             }
             Self::Unknown(name) => {
@@ -268,11 +268,9 @@ pub(crate) fn reply(entries: &[ReplyEntry]) -> Option<CompactString> {
     if entries.is_empty() {
         return None;
     }
-    let mut out = CompactString::from("\x1b]21;");
-    for (i, entry) in entries.iter().enumerate() {
-        if i > 0 {
-            out.push(';');
-        }
+    let mut out = CompactString::from("\x1b]21");
+    for entry in entries {
+        out.push(';');
         entry.append_to(&mut out);
     }
     out.push_str("\x1b\\");

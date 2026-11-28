@@ -262,7 +262,7 @@ pub enum Command {
     KittyKeyboardPop(usize),
 
     /// Graphics protocols — [vtdn.dev](https://vtdn.dev/) "Graphics Protocols".
-    /// DCS q / APC _G — a kitty graphics image header (decoded payload).
+    /// DCS q / APC _G — a kitty graphics image (header + decoded payload).
     #[cfg(feature = "kitty")]
     KittyImage(jetfish_image::KittyImage),
     /// OSC 1337;File=… — an iTerm2 inline image (decoded base64 bytes).

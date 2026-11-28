@@ -91,7 +91,7 @@ impl DecodeSeq for Csi<'_> {
 
 impl EncodeSeq for Csi<'_> {
     fn encode(self) -> Encoded {
-        let mut intermediates = SmallVec::<u8, 2>::new();
+        let mut intermediates = SmallVec::new();
         intermediates.extend_from_slice_copy(self.ints);
         let mut out = Encoded::new();
         Event::CsiDispatch {

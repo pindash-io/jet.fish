@@ -4,18 +4,16 @@
 //! SGR (`CSI … m`) apply driver and palette resolution. The raw [`Sgr`] type
 //! and its parsers live in `vtty`; this keeps the screen-specific apply driver.
 
-use smallvec::SmallVec;
-
-use vtty::{ColorId, ColorSpec, SgrEffect};
-use vtty::{parse_effects, single_effect, two_effects};
+use vtty::single_effect;
+use vtty::{ColorId, ColorSpec, Effects, two_simple_effects};
 
 use jetfish_protocol::Palette;
 
 use crate::commands::Apply;
 
-/// Apply every effect of an SGR sequence to `s`, in sequence order. One/two
-/// effects use the hot `single_effect`/`two_effects`; more fall back to
-/// [`vtty::parse_effects`].
+/// Apply every effect of an SGR sequence to `s`, in sequence order. The
+/// single-effect shape takes `single_effect`; everything else decodes and
+/// applies one effect at a time, so no effect list is ever built.
 #[inline]
 pub fn for_each_effect<S: Apply + ?Sized>(
     s: &mut S,
@@ -26,14 +24,12 @@ pub fn for_each_effect<S: Apply + ?Sized>(
         s.apply_effect(e);
         return;
     }
-    if let Some((e1, e2)) = two_effects(params, sep) {
-        s.apply_effect(e1);
-        s.apply_effect(e2);
+    if let Some((a, b)) = two_simple_effects(params, sep) {
+        s.apply_effect(a);
+        s.apply_effect(b);
         return;
     }
-    let mut effects = SmallVec::<SgrEffect, 8>::new();
-    parse_effects(params, sep, &mut effects);
-    for e in effects {
+    for e in Effects::new(params, sep) {
         s.apply_effect(e);
     }
 }

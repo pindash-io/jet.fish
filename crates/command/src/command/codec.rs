@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 //! Terminal-sequence codec:
+//!
 //! - [`EncodeSeq`] serializes a [`Command`] to canonical bytes
 //! - [`DecodeSeq`] parses a raw dispatch back
+//!
 //! They are inverses for textual commands.
 
 use smallvec::SmallVec;

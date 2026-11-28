@@ -42,16 +42,14 @@ impl Dcs {
 impl DecodeSeq for Dcs {
     fn decode(self) -> Option<Command> {
         let cmd = match self.final_byte {
+            // DECRQSS (`DCS $ q <setting> ST`).
             b'q' if self.ints.contains(&b'$') => {
-                // DECRQSS (`DCS $ q <setting> ST`).
                 Command::Query(Query::Setting(self.payload))
             }
-            b'q' if self.ints.contains(&b'+') => {
-                // XTGETTCAP (`DCS + q <hex> ST`) — the payload is hex.
-                Command::Query(Query::Termcap(jetfish_protocol::hex_decode(
-                    &self.payload,
-                )))
-            }
+            // XTGETTCAP (`DCS + q <hex> ST`) — the payload is hex.
+            b'q' if self.ints.contains(&b'+') => Command::Query(
+                Query::Termcap(jetfish_protocol::hex_decode(&self.payload)),
+            ),
             // Legacy iTerm2 synchronized updates (`DCS = 1 s` begin,
             // `DCS = 2 s` end).
             b's' if self.ints.contains(&b'=') => {

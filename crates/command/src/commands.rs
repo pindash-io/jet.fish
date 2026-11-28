@@ -9,7 +9,7 @@ use glam::USizeVec2;
 use smallvec::SmallVec;
 
 use vtty::Perform;
-use vtty::{ColorId, SgrEffect};
+use vtty::{ColorId, SgrEffect, TermFlags};
 use vtty::{DEFAULT_BG_ID, DEFAULT_FG_ID};
 
 use jetfish_protocol::{CursorPos, Grid, Palette, Style};
@@ -40,6 +40,34 @@ pub trait Apply {
     /// skip the `Command`/`SmallVec` copy.
     fn apply_sgr(&mut self, params: &[i32], sep: u16) {
         self.apply(Command::Sgr(Sgr::new(SmallVec::from(params), sep)));
+    }
+
+    /// Direct relative-motion dispatch: takes the 24-byte [`Move`] instead of
+    /// the whole [`Command`], so the cursor-motion family skips the owned
+    /// command. The default wraps it back into `Command`.
+    fn dispatch_move(&mut self, m: Move) {
+        self.apply(Command::Move(m));
+    }
+
+    /// Direct erase dispatch for `CSI Ps J` / `CSI Ps K`, both forms: takes
+    /// the mode byte and the line/display flag instead of the [`Command`].
+    fn dispatch_erase(&mut self, mode: u8, line: bool, selective: bool) {
+        self.apply(match (line, selective) {
+            (false, false) => Command::EraseDisplay(mode),
+            (true, false) => Command::EraseLine(mode),
+            (false, true) => Command::SelectiveEraseDisplay(mode),
+            (true, true) => Command::SelectiveEraseLine(mode),
+        });
+    }
+
+    /// Direct mode dispatch for the single-mode `CSI Ps h` / `CSI Ps l` form
+    /// (`?2026h`, `?25l`), including its `?` spelling.
+    fn dispatch_mode(&mut self, code: i32, private: bool, on: bool) {
+        let mode = TermFlags::from_mode_code(code, private);
+        if mode.is_empty() {
+            return;
+        }
+        self.apply(Command::SetMode { mode, on });
     }
 
     /// Direct CUP dispatch for the `CSI r ; c H` hot path; `pos` is the
